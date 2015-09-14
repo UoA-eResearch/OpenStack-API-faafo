@@ -1,6 +1,22 @@
-http://developer.openstack.org/firstapp-libcloud/getting_started.html
+# First App
 
-https://github.com/openstack/api-site/tree/master/firstapp
+This is a repository showing what it takes to get the OpenStack first app demo upp and running on the NeCTAR
+cloud.
 
-https://github.com/stackforge/faafo
-http://first-app-application-for-openstack.readthedocs.org/en/latest/
+The first app's code lives here:
+
+* https://github.com/stackforge/faafo
+
+Its documentation is found here:
+
+* http://first-app-application-for-openstack.readthedocs.org/en/latest/
+
+The documentation about getting it up and going on OpenStack is here:
+
+* http://developer.openstack.org/firstapp-libcloud/getting_started.html
+
+The source for the previous documentation:
+
+* https://github.com/openstack/api-site/tree/master/firstapp
+
+
