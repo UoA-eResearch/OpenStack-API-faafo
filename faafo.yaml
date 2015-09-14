@@ -55,11 +55,6 @@ resources:
       SecurityGroupIngress:
         -
           IpProtocol: "tcp"
-          FromPort: "80"
-          ToPort: "80"
-          CidrIp: "0.0.0.0/0"
-        -
-          IpProtocol: "tcp"
           FromPort: "22"
           ToPort: "22"
           CidrIp: "0.0.0.0/0"
@@ -150,8 +145,8 @@ resources:
           template: |
             #!/usr/bin/env bash
             curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r api -m 'amqp://guest:guest@%(services_ip)s:5672/' \
-            -d 'mysql://faafo:password@%(services_ip)s:3306/faafo'
+            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
+            -d 'mysql://faafo:password@services_ip:3306/faafo'
           params:
             services_ip: { get_attr: [app-services, first_address] }
 
@@ -170,10 +165,30 @@ resources:
           template: |
             #!/usr/bin/env bash
             curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r api -m 'amqp://guest:guest@%(services_ip)s:5672/' \
-            -d 'mysql://faafo:password@%(services_ip)s:3306/faafo'
+            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
+            -d 'mysql://faafo:password@services_ip:3306/faafo'
           params:
             services_ip: { get_attr: [app-services, first_address] }
+
+  worker_init:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: ungrouped
+      config:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            -i faafo -r worker -e 'http://api_1_ip' -m 'amqp://guest:guest@services_ip:5672/'
+          params:
+            api_1_ip: { get_attr: [instance_api_1, first_address] }
+            services_ip: { get_attr: [app-services, first_address] }
+
+  worker_init_userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: worker_init}
 
   instance_worker_1:
     type: OS::Nova::Server
@@ -184,15 +199,7 @@ resources:
       security_groups:
         - {get_resource: worker}
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r worker -e 'http://%(api_1_ip)s' -m 'amqp://guest:guest@%(services_ip)s:5672/'
-          params:
-            api_1_ip: { get_attr: [instance_api_1, first_address] }
-            services_ip: { get_attr: [app-services, first_address] }
+      user_data: { get_resource: worker_init_userdata }
 
   instance_worker_2:
     type: OS::Nova::Server
@@ -201,17 +208,9 @@ resources:
       flavor: { get_param: instance_type }
       key_name: { get_param: key_name }
       security_groups:
-        - {get_resource: worker}
+        - { get_resource: worker}
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r worker -e 'http://%(api_1_ip)s' -m 'amqp://guest:guest@%(services_ip)s:5672/'
-          params:
-            api_1_ip: { get_attr: [instance_api_1, first_address] }
-            services_ip: { get_attr: [app-services, first_address] }
+      user_data: { get_resource: worker_init_userdata }
 
   instance_worker_3:
     type: OS::Nova::Server
@@ -222,15 +221,7 @@ resources:
       security_groups:
         - {get_resource: worker}
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r worker -e 'http://%(api_1_ip)s' -m 'amqp://guest:guest@%(services_ip)s:5672/'
-          params:
-            api_1_ip: { get_attr: [instance_api_1, first_address] }
-            services_ip: { get_attr: [app-services, first_address] }
+      user_data: { get_resource: worker_init_userdata }
 
 outputs:
 
