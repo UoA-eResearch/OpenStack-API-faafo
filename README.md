@@ -7,10 +7,6 @@ The first app's code lives here:
 
 * https://github.com/stackforge/faafo
 
-Its documentation is found here:
-
-* http://first-app-application-for-openstack.readthedocs.org/en/latest/
-
 The documentation about getting it up and going on OpenStack is here:
 
 * http://developer.openstack.org/firstapp-libcloud/getting_started.html
