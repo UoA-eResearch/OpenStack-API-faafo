@@ -104,6 +104,7 @@ def launch_instance(instance_name, userdata, security_group):
                               size=flavor,
                               ex_keyname=keypair_name,
                               ex_userdata=userdata,
+                              # ex_availability_zone='NCI',
                               ex_security_groups=[security_group])
     print('Launching ' + instance_name)
     conn.wait_until_running([result])
