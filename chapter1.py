@@ -1,8 +1,9 @@
-# More or less a straight riff of the original documentation for chapter 1.
+# More or less a straight riff of the original documentation for chapter 1, titled
+# "Getting Started". (http://developer.openstack.org/firstapp-libcloud/getting_started.html)
 # There are two differences, though:
-#       We put the configuration into a config file, so that we can share it amongst files, and not accidentally
+#       I put the configuration into a config file, so that I can share it amongst files, and not accidentally
 #           check it into source control.
-#       We have modified the network routines to deal with NeCTAR's use of private IP's
+#       I have modified the network routines to deal with NeCTAR's use of private IP's
 
 # step-1
 from libcloud.compute.types import Provider

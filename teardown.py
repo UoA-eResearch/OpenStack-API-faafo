@@ -2,8 +2,6 @@ from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import NodeState
 
-import time
-
 __author__ = 'martinpaulo'
 
 try:
@@ -45,7 +43,7 @@ def delete_security_group(security_group_name):
             print('Deleting security Group ' + security_group.name)
             conn.ex_delete_security_group(security_group)
 
-
+# need to work out how to wait for instance to be properly deleted. Otherwise can't delete security groups.
 for instance in ('faafo', 'all-in-one', 'app-controller', 'app-worker-1', 'app-api-1',
                  'app-services', 'app-api-2', 'worker-1', 'worker-2', 'worker-3'):
     delete_instance(instance)

@@ -1,4 +1,14 @@
-# step-1
+# Chapter 2's script (titled "Introduction to the fractals application architecture",
+# at http://developer.openstack.org/firstapp-libcloud/introduction.html ), but with extra changes added.
+#       I put the configuration into a config file, so that I can share it amongst files, and not accidentally
+#           check it into source control.
+#       I have modified the network routines to deal with NeCTAR's use of private IP's
+#       I have removed more of the boiler plate code that just prints stuff out
+#       I have moved the network code that attaches an IP number into a method, so that we don't have to
+#           have it typed out twice.
+#       Added a work around that solved the problem of instances not having their private IP properly populated
+#           before it is accessed.
+
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 
@@ -25,27 +35,15 @@ conn = provider(auth_username,
                 ex_force_auth_version='2.0_password',
                 ex_force_service_region=region_name)
 
-# step-2
-images = conn.list_images()
-for image in images:
-    print(image)
 
-# step-3
-flavors = conn.list_sizes()
-for flavor in flavors:
-    print(flavor)
-
-# step-4
 image_id = config.get('Cloud', 'image_id')
 image = conn.get_image(image_id)
 print(image)
 
-# step-5
 flavor_id = config.get('Cloud', 'flavor_id')
 flavor = conn.ex_get_size(flavor_id)
 print(flavor)
 
-# step-9
 print('Checking for existing SSH key pair...')
 keypair_name = config.get('Credentials', 'keypair_name')
 pub_key_file = config.get('Credentials', 'pub_key_file')
@@ -59,9 +57,6 @@ if keypair_exists:
 else:
     print('adding keypair...')
     conn.import_key_pair_from_file(keypair_name, pub_key_file)
-
-for keypair in conn.list_key_pairs():
-    print(keypair)
 
 print('Checking for existing security group...')
 security_group_name = 'worker'
@@ -94,25 +89,8 @@ else:
     conn.ex_create_security_group_rule(controller_group, 'TCP', 80, 80)
     conn.ex_create_security_group_rule(controller_group, 'TCP', 5672, 5672, source_security_group=worker_group)
 
-userdata = '''#!/usr/bin/env bash
-curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-    -i messaging -i faafo -r api
-'''
 
-instance_controller_1 = conn.create_node(name='app-controller',
-                                         image=image,
-                                         size=flavor,
-                                         ex_keyname=keypair_name,
-                                         ex_userdata=userdata,
-                                         ex_security_groups=[controller_group])
-
-running = conn.wait_until_running([instance_controller_1], ssh_interface='private_ips')
-for instance in conn.list_nodes():
-    # if instance.id == instance_controller_1.id:
-    #     instance_controller_1 = instance
-    print(instance)
-
-
+# My introduced method to attach an IP number.
 def attach_ip_number(target_instance):
     result = target_instance.private_ips[0]
     print('Checking for unused Floating IP...')
@@ -140,13 +118,37 @@ def attach_ip_number(target_instance):
     return result
 
 
+print("Building controller")
+
+userdata = '''#!/usr/bin/env bash
+curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+    -i messaging -i faafo -r api
+'''
+
+instance_controller_1 = conn.create_node(name='app-controller',
+                                         image=image,
+                                         size=flavor,
+                                         ex_keyname=keypair_name,
+                                         ex_userdata=userdata,
+                                         ex_security_groups=[controller_group])
+
+running = conn.wait_until_running([instance_controller_1])
+for instance in conn.list_nodes():
+    if instance.id == instance_controller_1.id:
+        # fix for bug where by the instance isn't immediately updated with the instance data
+        instance_controller_1 = instance
+    print(instance)
+
 ip_controller = attach_ip_number(instance_controller_1)
 print('Instance ' + instance_controller_1.name + ' will be deployed to http://%s' % ip_controller)
+
+print("Building worker")
 
 userdata = '''#!/usr/bin/env bash
 curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
     -i faafo -r worker -e 'http://%(ip_controller)s' -m 'amqp://guest:guest@%(ip_controller)s:5672/'
 ''' % {'ip_controller': ip_controller}
+
 instance_worker_1 = conn.create_node(name='app-worker-1',
                                      image=image,
                                      size=flavor,
@@ -157,8 +159,9 @@ instance_worker_1 = conn.create_node(name='app-worker-1',
 conn.wait_until_running([instance_worker_1], ssh_interface='private_ips')
 
 for instance in conn.list_nodes():
-    # if instance.id == instance_worker_1.id:
-    #     instance_worker_1 = instance
+    if instance.id == instance_worker_1.id:
+        # fix for bug where by the instance isn't immediately updated with the instance data
+        instance_worker_1 = instance
     print(instance)
 
 ip_instance_worker_1 = attach_ip_number(instance_worker_1)

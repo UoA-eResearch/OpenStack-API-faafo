@@ -1,4 +1,14 @@
-# step-1
+# Chapter 3's script (titled "Scaling out", at http://developer.openstack.org/firstapp-libcloud/scaling_out.html ),
+# but with extra changes added.
+#       I put the configuration into a config file, so that I can share it amongst files, and not accidentally
+#           check it into source control.
+#       I have modified the network routines to deal with NeCTAR's use of private IP's
+#       I have removed more of the boiler plate code that just prints stuff out
+#       I have moved the code that creates a security group into a method
+#       I have moved the network code that attaches an IP number into a method
+#       I have moved the code that launches an instance into a method
+#       Added a work around that solved the problem of instances not having their private IP properly populated
+#           before it is accessed.
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 
@@ -25,17 +35,14 @@ conn = provider(auth_username,
                 ex_force_auth_version='2.0_password',
                 ex_force_service_region=region_name)
 
-# step-4
 image_id = config.get('Cloud', 'image_id')
 image = conn.get_image(image_id)
 print(image)
 
-# step-5
 flavor_id = config.get('Cloud', 'flavor_id')
 flavor = conn.ex_get_size(flavor_id)
 print(flavor)
 
-# step-9
 print('Checking for existing SSH key pair...')
 keypair_name = config.get('Credentials', 'keypair_name')
 pub_key_file = config.get('Credentials', 'pub_key_file')
@@ -134,17 +141,18 @@ def attach_ip_number(target_instance):
             print('Could not find a Floating IP, and there are no Public IP\'s?')
     return result
 
+
+# launch app services instance (database and messaging)
 app_services_userdata = '''#!/usr/bin/env bash
 curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
     -i database -i messaging
 '''
 
 instance_services = launch_instance('app-services', app_services_userdata, services_group)
-
 services_ip = attach_ip_number(instance_services)
-
 print('Instance services will be available for ssh at: //%s' % services_ip)
 
+# launch the two api instances
 api_userdata = '''#!/usr/bin/env bash
 curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
     -i faafo -r api -m 'amqp://guest:guest@%(services_ip)s:5672/' \
@@ -152,36 +160,27 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
 ''' % {'services_ip': services_ip}
 
 instance_api_1 = launch_instance('app-api-1', api_userdata, api_group)
-
 api_1_ip = attach_ip_number(instance_api_1)
-
 print('Instance api_1 will be deployed to http://%s' % api_1_ip)
 
 instance_api_2 = launch_instance('app-api-2', api_userdata, api_group)
-
 api_2_ip = attach_ip_number(instance_api_2)
-
 print('Instance api_2 will be deployed to http://%s' % api_2_ip)
 
+# launch the three worker insances
 worker_user_data = '''#!/usr/bin/env bash
 curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
     -i faafo -r worker -e 'http://%(api_1_ip)s' -m 'amqp://guest:guest@%(services_ip)s:5672/'
 ''' % {'api_1_ip': api_1_ip, 'services_ip': services_ip}
 
 instance_worker_1 = launch_instance('worker-1', worker_user_data, worker_group)
-
 worker_1_ip = attach_ip_number(instance_worker_1)
-
 print('Instance worker_1_ip will be available for ssh at: %s' % worker_1_ip)
 
 instance_worker_2 = launch_instance('worker-2', worker_user_data, worker_group)
-
 worker_2_ip = attach_ip_number(instance_worker_2)
-
 print('Instance worker_2_ip will be available for ssh at: %s' % worker_2_ip)
 
 instance_worker_3 = launch_instance('worker-3', worker_user_data, worker_group)
-
 worker_3_ip = attach_ip_number(instance_worker_3)
-
 print('Instance worker_3_ip will be available for ssh at: %s' % worker_3_ip)
