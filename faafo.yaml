@@ -22,7 +22,6 @@ parameters:
   instance_type:
     type: string
     description: The flavour the webserver is to run on
-    default: m2.xsmall
     constraints:
       - custom_constraint: nova.flavor
         description:  Must be a valid flavour provided by your cloud provider.
@@ -30,7 +29,6 @@ parameters:
   image_id:
     type: string
     description: ID of the image to use for the instance to be created
-    default: 2a882d9c-3185-414c-9683-a4646b5c785e
     constraints:
       - custom_constraint: glance.image
         description: Must be a valid image on your cloud

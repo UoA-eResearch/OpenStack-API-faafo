@@ -1,0 +1,5 @@
+parameters:
+  # Replace with values specific to your environment, and then launch the template with this as the environment
+  key_name: nectar_dev
+  instance_type: m2.xsmall
+  image_id: 2a882d9c-3185-414c-9683-a4646b5c785e
