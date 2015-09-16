@@ -1,0 +1,339 @@
+# http://docs.openstack.org/developer/heat/template_guide/hot_spec.html#heat-template-version
+heat_template_version: 2014-10-16
+
+# This template adds the ability to autoscale the workers to chapter three's code...
+# I don't recreate the network stuff as the cloud available to me doesn't have that functionality
+
+description: |
+  A template to bring up the faafo application as per chapter 3's code
+
+
+parameters:
+
+  key_name:
+    type: string
+    description: Name of an existing KeyPair to enable SSH access to the instances
+    constraints:
+      - custom_constraint: nova.keypair
+        description: Must already exist on your cloud
+
+  instance_type:
+    type: string
+    description: The flavour the webserver is to run on
+    constraints:
+      - custom_constraint: nova.flavor
+        description:  Must be a valid flavour provided by your cloud provider.
+
+  image_id:
+    type: string
+    description: ID of the image to use for the instance to be created
+    constraints:
+      - custom_constraint: glance.image
+        description: Must be a valid image on your cloud
+
+
+resources:
+
+  api:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For services that run on an api node"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+
+  worker:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For services that run on a worker node"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+
+  controller:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For services that run on a worker node"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "5672"
+          ToPort: "5672"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: worker }
+
+  services:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For DB and AMPQ services only"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "5672"
+          ToPort: "5672"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: worker }
+        -
+          IpProtocol: "tcp"
+          FromPort: "5672"
+          ToPort: "5672"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: api }
+        -
+          IpProtocol: "tcp"
+          FromPort: "3306"
+          ToPort: "3306"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: api }
+
+  app-services:
+    # The database and the AMPQ services run on this machine.
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_id }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_name }
+      security_groups:
+        - {get_resource: services}
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            -i database -i messaging
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+
+  api_init:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: ungrouped
+      config:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
+            -d 'mysql://faafo:password@services_ip:3306/faafo'
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+            services_ip: { get_attr: [app-services, first_address] }
+
+  api_init_userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: api_init}
+
+  instance_api_1:
+    # The web interface is available here
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_id }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_name }
+      security_groups:
+        - {get_resource: api}
+      user_data_format: RAW
+      user_data: { get_resource: api_init_userdata }
+
+  instance_api_2:
+    # The web interface is available here as well
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_id }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_name }
+      security_groups:
+        - {get_resource: api}
+      user_data_format: RAW
+      user_data: { get_resource: api_init_userdata }
+
+  worker_init:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: ungrouped
+      config:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            -i faafo -r worker -e 'http://api_1_ip' -m 'amqp://guest:guest@services_ip:5672/'
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+            api_1_ip: { get_attr: [instance_api_1, first_address] }
+            services_ip: { get_attr: [app-services, first_address] }
+
+  worker_init_userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: worker_init}
+
+  worker_auto_scaling_group:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: OS::Nova::Server
+        metadata: {"metering.stack": {get_param: "OS::stack_id"}}
+        properties:
+          image: { get_param: image_id }
+          flavor: { get_param: instance_type }
+          key_name: { get_param: key_name }
+          security_groups:
+            - {get_resource: worker}
+          user_data_format: RAW
+          user_data: { get_resource: worker_init_userdata }
+      min_size: 1
+      desired_capacity: 1
+      max_size: 3
+
+  wait_handle:
+    type: OS::Heat::WaitConditionHandle
+
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    depends_on: [ app-services, instance_api_1, instance_api_2, worker_init ]
+    properties:
+      handle: { get_resource: wait_handle }
+      # we will have all 4 initial servers clock in when they are finished installing their software
+      count: 4
+      # we'll give it 12 minutes
+      timeout: 720
+
+  scale_up_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: worker_auto_scaling_group}
+      cooldown: 60
+      scaling_adjustment: 1
+
+  scale_down_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: worker_auto_scaling_group}
+      cooldown: 60
+      scaling_adjustment: '-1'
+
+  cpu_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 10 minute
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [scale_up_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+
+  cpu_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 10 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 600
+      evaluation_periods: 1
+      threshold: 15
+      alarm_actions:
+        - {get_attr: [scale_down_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt
+
+outputs:
+
+  api_1_url:
+    description: URL for api_1 server
+    value:
+      list_join: ['', ['http://', get_attr: [instance_api_1, first_address]]]
+
+  api_2_url:
+    description: URL for api_2 server
+    value:
+      list_join: ['', ['http://', get_attr: [instance_api_2, first_address]]]
+
+  services_ip:
+    description: The db and ampq services
+    value:
+      list_join: ['', ['Are at: ', get_attr: [app-services, first_address]]]
+
+  asg_server_list:
+    description: This is a list of server names that are part of the autoscaling group.
+    value: { get_attr: [worker_auto_scaling_group, outputs_list, name] }
+
+  asg_networks:
+    description:  This is a map of server resources and their networks that are part of the autoscaling group.
+    value: { get_attr: [worker_auto_scaling_group, outputs, networks] }
+
+  scale__workers_up_url:
+    description: >
+      This URL is the webhook to scale the group up. Invoke by doing an HTTP POST to this URL.
+      No body or other headers is needed. But do put quotes around the url!
+    value: {get_attr: [scale_up_policy, alarm_url]}
+
+  scale_workers_down_url:
+    description: >
+      This URL is the webhook to scale the group down. Invoke by doing an HTTP POST to this URL.
+      No body or other headers is needed. But do put quotes around the url
+    value: {get_attr: [scale_down_policy, alarm_url]}
+
+  ceilometer_query:
+    value:
+      str_replace:
+        template: >
+          ceilometer statistics -m cpu_util
+          -q metadata.user_metadata.stack=stackval -p 600 -a avg
+        params:
+          stackval: { get_param: "OS::stack_id" }
+    description: >
+      This is a Ceilometer query for statistics on the cpu_util meter
+      Samples about OS::Nova::Server instances in this stack.  The -q
+      parameter selects Samples according to the subject's metadata.
+      When a VM's metadata includes an item of the form metering.X=Y,
+      the corresponding Ceilometer resource has a metadata item of the
+      form user_metadata.X=Y and samples about resources so tagged can
+      be queried with a Ceilometer query term of the form
+      metadata.user_metadata.X=Y.  In this case the nested stacks give
+      their VMs metadata that is passed as a nested stack parameter,
+      and this stack passes a metadata of the form metering.stack=Y,
+      where Y is this stack's ID.
