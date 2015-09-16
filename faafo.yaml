@@ -1,9 +1,13 @@
 # http://docs.openstack.org/developer/heat/template_guide/hot_spec.html#heat-template-version
 heat_template_version: 2014-10-16
 
+# This simply recreates the libcloud code in chapter 3, but with the heat engine
+# One important difference is that the code in chapter 3 assembles the resources sequentially. Heat builds
+# it in parallel, where possible.
+# I don't recreate the network stuff as the cloud available to me doesn't have that functionality
 
 description: |
-  A template to bring up the faafo application as an autoscaling one
+  A template to bring up the faafo application as per chapter 3's code
 
 
 parameters:
@@ -26,10 +30,12 @@ parameters:
   image_id:
     type: string
     description: ID of the image to use for the instance to be created
-    default: 7313d773-3cd9-4e69-98d2-eff1f9797480
+    default: 2a882d9c-3185-414c-9683-a4646b5c785e
     constraints:
       - custom_constraint: glance.image
         description: Must be a valid image on your cloud
+
+
 resources:
 
   api:
@@ -125,10 +131,37 @@ resources:
       security_groups:
         - {get_resource: services}
       user_data_format: RAW
-      user_data: |
-        #!/usr/bin/env bash
-        curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-        -i database -i messaging
+      user_data:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            -i database -i messaging
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+
+  api_init:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: ungrouped
+      config:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
+            -d 'mysql://faafo:password@services_ip:3306/faafo'
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+            services_ip: { get_attr: [app-services, first_address] }
+
+  api_init_userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: api_init}
 
   instance_api_1:
     # The web interface is available here
@@ -140,15 +173,7 @@ resources:
       security_groups:
         - {get_resource: api}
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
-            -d 'mysql://faafo:password@services_ip:3306/faafo'
-          params:
-            services_ip: { get_attr: [app-services, first_address] }
+      user_data: { get_resource: api_init_userdata }
 
   instance_api_2:
     # The web interface is available here as well
@@ -160,15 +185,7 @@ resources:
       security_groups:
         - {get_resource: api}
       user_data_format: RAW
-      user_data:
-        str_replace:
-          template: |
-            #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
-            -d 'mysql://faafo:password@services_ip:3306/faafo'
-          params:
-            services_ip: { get_attr: [app-services, first_address] }
+      user_data: { get_resource: api_init_userdata }
 
   worker_init:
     type: OS::Heat::SoftwareConfig
@@ -180,7 +197,9 @@ resources:
             #!/usr/bin/env bash
             curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
             -i faafo -r worker -e 'http://api_1_ip' -m 'amqp://guest:guest@services_ip:5672/'
+            wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
+            wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
             api_1_ip: { get_attr: [instance_api_1, first_address] }
             services_ip: { get_attr: [app-services, first_address] }
 
@@ -223,6 +242,22 @@ resources:
       user_data_format: RAW
       user_data: { get_resource: worker_init_userdata }
 
+  wait_handle:
+    # http://docs.openstack.org/developer/heat/template_guide/openstack.html#OS::Heat::WaitConditionHandle
+    type: OS::Heat::WaitConditionHandle
+
+  wait_condition:
+    # http://docs.openstack.org/developer/heat/template_guide/openstack.html#OS::Heat::WaitCondition
+    type: OS::Heat::WaitCondition
+    depends_on: [app-services, instance_api_1, instance_api_2, instance_worker_1, instance_worker_2, instance_worker_3]
+    properties:
+      handle: { get_resource: wait_handle }
+      # we will have all 6 servers clock in when they are finished installing their software
+      count: 6
+      # we'll give it 12 minutes
+      timeout: 720
+
+
 outputs:
 
   api_1_url:
@@ -238,19 +273,19 @@ outputs:
   services_ip:
     description: The db and ampq services
     value:
-      list_join: ['', ['The db and ampq services: ', get_attr: [app-services, first_address]]]
+      list_join: ['', ['Are at: ', get_attr: [app-services, first_address]]]
 
   worker_1:
     description: Just one of the workers
     value:
-      list_join: ['', ['Worker 1: ', get_attr: [instance_worker_1, first_address]]]
+      list_join: ['', ['Worker 1 is at: ', get_attr: [instance_worker_1, first_address]]]
 
   worker_2:
     description: Just one of the workers
     value:
-      list_join: ['', ['Worker 2: ', get_attr: [instance_worker_2, first_address]]]
+      list_join: ['', ['Worker 2 is at: ', get_attr: [instance_worker_2, first_address]]]
 
   worker_3:
     description: Just one of the workers
     value:
-      list_join: ['', ['Worker 3: ', get_attr: [instance_worker_3, first_address]]]
+      list_join: ['', ['Worker 3 is at: ', get_attr: [instance_worker_3, first_address]]]
