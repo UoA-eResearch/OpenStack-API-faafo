@@ -1,6 +1,6 @@
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
-from libcloud.compute.types import NodeState
+import time
 
 __author__ = 'martinpaulo'
 
@@ -29,21 +29,33 @@ conn = provider(auth_username,
 
 
 def delete_instance(instance_name):
-    print('Checking for existing instance named ' + instance_name + '...')
+    print('Checking for existing instance named {}...'.format(instance_name))
     for node in conn.list_nodes():
         if node.name == instance_name:
-            print('Deleting instance ' + node.name)
+            print('Deleting instance '.format(node.name))
             conn.destroy_node(node)
+            # wait for the node to be deleted before continuing
+            found = True
+            while found:
+                found = False
+                for a_node in conn.list_nodes():
+                    if a_node.uuid == node.uuid:
+                        found = True
+                        break
+                if found:
+                    print('.')
+                    time.sleep(5)
+            break
 
 
 def delete_security_group(security_group_name):
-    print('Checking for existing security group ' + security_group_name + '...')
+    print('Checking for existing security group {}...'.format(security_group_name))
     for security_group in conn.ex_list_security_groups():
         if security_group.name == security_group_name:
-            print('Deleting security Group ' + security_group.name)
+            print('Deleting security Group {}'.format(security_group.name))
             conn.ex_delete_security_group(security_group)
 
-# need to work out how to wait for instance to be properly deleted. Otherwise can't delete security groups.
+
 for instance in ('faafo', 'all-in-one', 'app-controller', 'app-worker-1', 'app-api-1',
                  'app-services', 'app-api-2', 'worker-1', 'worker-2', 'worker-3'):
     delete_instance(instance)
