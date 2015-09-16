@@ -1,0 +1,15 @@
+# simply copy to faafo.cfg and then provide the required parameters in that copy.
+# Never check faafo.cfg into Version Control!!!
+[Connection]
+auth_username =
+auth_password =
+auth_url =
+project_name =
+region_name =
+
+[Cloud]
+image_id =
+flavor_id =
+
+[Credentials]
+keypair_name =
