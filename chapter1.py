@@ -1,9 +1,11 @@
 # More or less a straight riff of the original documentation for chapter 1, titled
 # "Getting Started". (http://developer.openstack.org/firstapp-libcloud/getting_started.html)
-# There are two differences, though:
+# There are three differences, though:
 #       I put the configuration into a config file, so that I can share it amongst files, and not accidentally
 #           check it into source control.
 #       I have modified the network routines to deal with NeCTAR's use of private IP's
+#       Added a work around that solves the problem of instances not having their private IP properly populated
+#           before it is accessed.
 
 # step-1
 from libcloud.compute.types import Provider
@@ -75,7 +77,7 @@ for keypair in conn.list_key_pairs():
         keypair_exists = True
 
 if keypair_exists:
-    print('Keypair ' + keypair_name + ' already exists. Skipping import.')
+    print('Keypair {} already exists. Skipping import'.format(keypair_name))
 else:
     print('adding keypair...')
     conn.import_key_pair_from_file(keypair_name, pub_key_file)
@@ -93,7 +95,7 @@ for security_group in conn.ex_list_security_groups():
         security_group_exists = True
 
 if security_group_exists:
-    print('Security Group ' + all_in_one_security_group.name + ' already exists. Skipping creation.')
+    print('Security Group {} already exists. Skipping creation'.format(all_in_one_security_group.name))
 else:
     all_in_one_security_group = conn.ex_create_security_group(security_group_name,
                                                               'network access for all-in-one application.')
@@ -119,51 +121,56 @@ for instance in conn.list_nodes():
         instance_exists = True
 
 if instance_exists:
-    print('Instance ' + testing_instance.name + ' already exists. Skipping creation.')
+    print('Instance {} already exists. Skipping creation'.format(testing_instance.name))
 else:
+    print('Creating new instance')
     testing_instance = conn.create_node(name=instance_name,
                                         image=image,
                                         size=flavor,
                                         ex_keyname=keypair_name,
                                         ex_userdata=userdata,
                                         ex_security_groups=[all_in_one_security_group])
-    conn.wait_until_running([testing_instance], ssh_interface='private_ips')
+    conn.wait_until_running([testing_instance])
 
+# fix for bug where by the instance isn't immediately updated with the instance data
 for instance in conn.list_nodes():
-    # if instance.id == testing_instance.id:
-    #     # fix for bug where by the instance isn't immediately updated with the instance data
-    #     testing_instance = instance
-    print(instance)
+    if instance.id == testing_instance.id:
+        testing_instance = instance
 
-# step-13
-print('Checking for unused Floating IP...')
-unused_floating_ip = None
-for floating_ip in conn.ex_list_floating_ips():
-    if floating_ip.node_id:
-        unused_floating_ip = floating_ip
-        break
+print (testing_instance)
 
-if not unused_floating_ip:
-    try:
-        pool = conn.ex_list_floating_ip_pools()[0]
-        print('Allocating new Floating IP from pool: {}'.format(pool))
-        unused_floating_ip = pool.create_floating_ip()
-    except IndexError:
-        print('There are no Floating IP\'s found')
+ip_address = None
+
+# Default to the private IP if, there is one.
+if len(testing_instance.private_ips) > 0:
+    ip_address = testing_instance.private_ips[0]
+    print('Private IP is: {}'.format(ip_address))
 
 # step-14
-if len(testing_instance.public_ips) > 0:
-    print('Instance ' + testing_instance.name + ' already has a Public ip. Skipping attachment.')
-else:
-    if unused_floating_ip:
-        conn.ex_attach_floating_ip_to_node(testing_instance, unused_floating_ip)
-    else:
-        print('Could not find a Floating IP, and there are no Public IP\'s?')
-
-# step-15
-ip_address = testing_instance.private_ips[0]
+# But prefer the public one, if there is one.
 if len(testing_instance.public_ips) > 0:
     ip_address = testing_instance.public_ips[0]
-elif unused_floating_ip:
-    ip_address = unused_floating_ip.ip_address
-print('The Fractals app will be deployed to http://%s' % ip_address)
+    print('Instance {} already has a Public IP. Skipping attachment'.format(testing_instance.name))
+else:
+    # step-13
+    print('Checking for unused Floating IP...')
+    unused_floating_ip = None
+    # find the first unassigned floating ip
+    for floating_ip in conn.ex_list_floating_ips():
+        if not floating_ip.node_id:
+            unused_floating_ip = floating_ip
+            break
+    # no unassigned floating IP's so we need to create one
+    if not unused_floating_ip:
+        try:
+            pool = conn.ex_list_floating_ip_pools()[0]
+            print('Allocating new Floating IP from pool: {}'.format(pool))
+            unused_floating_ip = pool.create_floating_ip()
+        except IndexError:
+            print('There are no unused Floating IP\'s found!')
+    if unused_floating_ip:
+        conn.ex_attach_floating_ip_to_node(testing_instance, unused_floating_ip)
+        ip_address = unused_floating_ip.ip_address
+
+# step-15
+print('The Fractals app will be deployed to http://{}'.format(ip_address))

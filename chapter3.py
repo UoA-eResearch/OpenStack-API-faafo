@@ -7,7 +7,7 @@
 #       I have moved the code that creates a security group into a method
 #       I have moved the network code that attaches an IP number into a method
 #       I have moved the code that launches an instance into a method
-#       Added a work around that solved the problem of instances not having their private IP properly populated
+#       Added a work around that solves the problem of instances not having their private IP properly populated
 #           before it is accessed.
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
@@ -52,7 +52,7 @@ for keypair in conn.list_key_pairs():
         keypair_exists = True
 
 if keypair_exists:
-    print('Keypair ' + keypair_name + ' already exists. Skipping import.')
+    print('Keypair {} already exists. Skipping import'.format(keypair_name))
 else:
     print('adding keypair...')
     conn.import_key_pair_from_file(keypair_name, pub_key_file)
@@ -66,9 +66,9 @@ def create_security_group(security_group_name, security_group_description, rules
             result = security_group
             security_group_exists = True
     if security_group_exists:
-        print('Security Group ' + result.name + ' already exists. Skipping creation.')
+        print('Security Group {} already exists. Skipping creation'.format(result.name))
     else:
-        print('Creating security group ' + security_group_name)
+        print('Creating security group {}'.format(security_group_name))
         result = conn.ex_create_security_group(security_group_name, security_group_description)
         for rule in rules:
             conn.ex_create_security_group_rule(result, **rule)
@@ -106,40 +106,43 @@ def launch_instance(instance_name, userdata, security_group):
                               ex_userdata=userdata,
                               # ex_availability_zone='NCI',
                               ex_security_groups=[security_group])
-    print('Launching ' + instance_name)
+    print('Launching {}'.format(instance_name))
     conn.wait_until_running([result])
+    # fix for bug where by the result isn't immediately updated with the instance IP data
     for instance in conn.list_nodes():
         if instance.id == result.id:
-            # fix for bug where by the instance isn't immediately updated with the instance data
             result = instance
-        print(instance)
+    print(result)
     return result
 
 
 def attach_ip_number(target_instance):
-    result = target_instance.private_ips[0]
-    print('Checking for unused Floating IP...')
-    unused_floating_ip = None
-    for floating_ip in conn.ex_list_floating_ips():
-        if floating_ip.node_id:
-            unused_floating_ip = floating_ip
-            break
-    if not unused_floating_ip:
-        try:
-            pool = conn.ex_list_floating_ip_pools()[0]
-            print('Allocating new Floating IP from pool: {}'.format(pool))
-            unused_floating_ip = pool.create_floating_ip()
-        except IndexError:
-            print('There are no Floating IP\'s found')
+    if len(target_instance.private_ips) > 0:
+        result = target_instance.private_ips[0]
+        print('Private IP is: {}'.format(result))
+    # But prefer the public one, if there is one.
     if len(target_instance.public_ips) > 0:
         result = target_instance.public_ips[0]
-        print('Instance ' + target_instance.name + ' already has a Public ip. Skipping attachment.')
+        print('Instance {} already has a Public IP. Skipping attachment'.format(target_instance.name))
     else:
+        print('Checking for unused Floating IP...')
+        unused_floating_ip = None
+        # find the first unassigned floating ip
+        for floating_ip in conn.ex_list_floating_ips():
+            if not floating_ip.node_id:
+                unused_floating_ip = floating_ip
+                break
+        # no unassigned floating IP's so we need to create one
+        if not unused_floating_ip:
+            try:
+                pool = conn.ex_list_floating_ip_pools()[0]
+                print('Allocating new Floating IP from pool: {}'.format(pool))
+                unused_floating_ip = pool.create_floating_ip()
+            except IndexError:
+                print('There are no Floating IP\'s found')
         if unused_floating_ip:
-            result = unused_floating_ip.ip_address
             conn.ex_attach_floating_ip_to_node(target_instance, unused_floating_ip)
-        else:
-            print('Could not find a Floating IP, and there are no Public IP\'s?')
+            result = unused_floating_ip.ip_address
     return result
 
 
@@ -151,7 +154,7 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
 
 instance_services = launch_instance('app-services', app_services_userdata, services_group)
 services_ip = attach_ip_number(instance_services)
-print('Instance services will be available for ssh at: //%s' % services_ip)
+print('Instance services will be available for ssh at: //{}'.format(services_ip))
 
 # launch the two api instances
 api_userdata = '''#!/usr/bin/env bash
@@ -162,13 +165,13 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
 
 instance_api_1 = launch_instance('app-api-1', api_userdata, api_group)
 api_1_ip = attach_ip_number(instance_api_1)
-print('Instance api_1 will be deployed to http://%s' % api_1_ip)
+print('Instance api_1 will be deployed to http://{}'.format(api_1_ip))
 
 instance_api_2 = launch_instance('app-api-2', api_userdata, api_group)
 api_2_ip = attach_ip_number(instance_api_2)
-print('Instance api_2 will be deployed to http://%s' % api_2_ip)
+print('Instance api_2 will be deployed to http:{}'.format(api_2_ip))
 
-# launch the three worker insances
+# launch the three worker instances
 worker_user_data = '''#!/usr/bin/env bash
 curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
     -i faafo -r worker -e 'http://%(api_1_ip)s' -m 'amqp://guest:guest@%(services_ip)s:5672/'
@@ -176,12 +179,12 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
 
 instance_worker_1 = launch_instance('worker-1', worker_user_data, worker_group)
 worker_1_ip = attach_ip_number(instance_worker_1)
-print('Instance worker_1_ip will be available for ssh at: %s' % worker_1_ip)
+print('Instance worker_1_ip will be available for ssh at: {}'.format(worker_1_ip))
 
 instance_worker_2 = launch_instance('worker-2', worker_user_data, worker_group)
 worker_2_ip = attach_ip_number(instance_worker_2)
-print('Instance worker_2_ip will be available for ssh at: %s' % worker_2_ip)
+print('Instance worker_2_ip will be available for ssh at: {}'.format(worker_2_ip))
 
 instance_worker_3 = launch_instance('worker-3', worker_user_data, worker_group)
 worker_3_ip = attach_ip_number(instance_worker_3)
-print('Instance worker_3_ip will be available for ssh at: %s' % worker_3_ip)
+print('Instance worker_3_ip will be available for ssh at: {}'.format(worker_3_ip))

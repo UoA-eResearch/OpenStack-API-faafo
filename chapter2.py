@@ -6,7 +6,7 @@
 #       I have removed more of the boiler plate code that just prints stuff out
 #       I have moved the network code that attaches an IP number into a method, so that we don't have to
 #           have it typed out twice.
-#       Added a work around that solved the problem of instances not having their private IP properly populated
+#       Added a work around that solves the problem of instances not having their private IP properly populated
 #           before it is accessed.
 
 from libcloud.compute.types import Provider
@@ -53,7 +53,7 @@ for keypair in conn.list_key_pairs():
         keypair_exists = True
 
 if keypair_exists:
-    print('Keypair ' + keypair_name + ' already exists. Skipping import.')
+    print('Keypair {} already exists. Skipping import'.format(keypair_name))
 else:
     print('adding keypair...')
     conn.import_key_pair_from_file(keypair_name, pub_key_file)
@@ -67,7 +67,7 @@ for security_group in conn.ex_list_security_groups():
         security_group_exists = True
 
 if security_group_exists:
-    print('Security Group ' + worker_group.name + ' already exists. Skipping creation.')
+    print('Security Group {} already exists. Skipping creation'.format(worker_group.name))
 else:
     worker_group = conn.ex_create_security_group('worker', 'for services that run on a worker node')
     conn.ex_create_security_group_rule(worker_group, 'TCP', 80, 80)
@@ -82,7 +82,7 @@ for security_group in conn.ex_list_security_groups():
         security_group_exists = True
 
 if security_group_exists:
-    print('Security Group ' + controller_group.name + ' already exists. Skipping creation.')
+    print('Security Group {} already exists. Skipping creation'.format(controller_group.name))
 else:
     controller_group = conn.ex_create_security_group('control', 'for services that run on a control node')
     conn.ex_create_security_group_rule(controller_group, 'TCP', 22, 22)
@@ -90,31 +90,34 @@ else:
     conn.ex_create_security_group_rule(controller_group, 'TCP', 5672, 5672, source_security_group=worker_group)
 
 
-# My introduced method to attach an IP number.
+# An introduced method to attach an IP number.
 def attach_ip_number(target_instance):
-    result = target_instance.private_ips[0]
-    print('Checking for unused Floating IP...')
-    unused_floating_ip = None
-    for floating_ip in conn.ex_list_floating_ips():
-        if floating_ip.node_id:
-            unused_floating_ip = floating_ip
-            break
-    if not unused_floating_ip:
-        try:
-            pool = conn.ex_list_floating_ip_pools()[0]
-            print('Allocating new Floating IP from pool: {}'.format(pool))
-            unused_floating_ip = pool.create_floating_ip()
-        except IndexError:
-            print('There are no Floating IP\'s found')
+    if len(target_instance.private_ips) > 0:
+        result = target_instance.private_ips[0]
+        print('Private IP is: {}'.format(result))
+    # But prefer the public one, if there is one.
     if len(target_instance.public_ips) > 0:
         result = target_instance.public_ips[0]
-        print('Instance ' + target_instance.name + ' already has a Public ip. Skipping attachment.')
+        print('Instance {} already has a Public IP. Skipping attachment'.format(target_instance.name))
     else:
+        print('Checking for unused Floating IP...')
+        unused_floating_ip = None
+        # find the first unassigned floating ip
+        for floating_ip in conn.ex_list_floating_ips():
+            if not floating_ip.node_id:
+                unused_floating_ip = floating_ip
+                break
+        # no unassigned floating IP's so we need to create one
+        if not unused_floating_ip:
+            try:
+                pool = conn.ex_list_floating_ip_pools()[0]
+                print('Allocating new Floating IP from pool: {}'.format(pool))
+                unused_floating_ip = pool.create_floating_ip()
+            except IndexError:
+                print('There are no Floating IP\'s found')
         if unused_floating_ip:
-            result = unused_floating_ip.ip_address
             conn.ex_attach_floating_ip_to_node(target_instance, unused_floating_ip)
-        else:
-            print('Could not find a Floating IP, and there are no Public IP\'s?')
+            result = unused_floating_ip.ip_address
     return result
 
 
@@ -133,14 +136,15 @@ instance_controller_1 = conn.create_node(name='app-controller',
                                          ex_security_groups=[controller_group])
 
 running = conn.wait_until_running([instance_controller_1])
+
+# fix for bug where by the instance isn't immediately updated with the instance data
 for instance in conn.list_nodes():
     if instance.id == instance_controller_1.id:
-        # fix for bug where by the instance isn't immediately updated with the instance data
         instance_controller_1 = instance
-    print(instance)
+print(instance_controller_1)
 
 ip_controller = attach_ip_number(instance_controller_1)
-print('Instance ' + instance_controller_1.name + ' will be deployed to http://%s' % ip_controller)
+print('Instance {} will be deployed to http://{}'.format(instance_controller_1.name, ip_controller ))
 
 print("Building worker")
 
@@ -158,11 +162,11 @@ instance_worker_1 = conn.create_node(name='app-worker-1',
 
 conn.wait_until_running([instance_worker_1], ssh_interface='private_ips')
 
+# fix for bug where by the instance isn't immediately updated with the instance data
 for instance in conn.list_nodes():
     if instance.id == instance_worker_1.id:
-        # fix for bug where by the instance isn't immediately updated with the instance data
         instance_worker_1 = instance
-    print(instance)
+print(instance_worker_1)
 
 ip_instance_worker_1 = attach_ip_number(instance_worker_1)
-print('The worker will be available for SSH at %s' % ip_instance_worker_1)
+print('The worker will be available for SSH at {}'.format(ip_instance_worker_1))
