@@ -169,7 +169,7 @@ print('Instance api_1 will be deployed to http://{}'.format(api_1_ip))
 
 instance_api_2 = launch_instance('app-api-2', api_userdata, api_group)
 api_2_ip = attach_ip_number(instance_api_2)
-print('Instance api_2 will be deployed to http:{}'.format(api_2_ip))
+print('Instance api_2 will be deployed to http://{}'.format(api_2_ip))
 
 # launch the three worker instances
 worker_user_data = '''#!/usr/bin/env bash
