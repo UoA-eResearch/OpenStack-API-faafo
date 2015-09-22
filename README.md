@@ -17,7 +17,7 @@ The source for the previous documentation:
 
 # Notes
 
-## Chapter 1
+## Chapter 1: Getting started
 
 The final complete code sample doesn't deal with OpenStack installations that use the private IP's as public IP's. 
 And there is at least one of those that I know....
@@ -25,13 +25,20 @@ And there is at least one of those that I know....
 It also creates an IP address in the pool of floating IP's: and then ignores it if there is a public IP... Surely in
 this case it just shouldn't bother with creating an IP in the pool of floating IP addresses?
 
-## Chapter 2
+## Chapter 2: Introduction to the fractals application architecture
 
 I removed some of the boilerplate from Chapter 1 and introduces a method to allocate the IP number.
 
-## Chapter 3
+## Chapter 3: Scaling out
 
 I've removed some of the boilerplate from Chapter 1 and introduced several more methods.
+
+## Chapter 6: Orchestration
+
+I've added two templates so far: 
+
+* [FAAFO](faafo.yaml): a straight port of chapter 3's code.
+* [FAAFO with autoscaling workers](faafo_autoscaling_workers.yaml): the workers are now part of an autoscaling group.
 
 ## In general
 
@@ -81,6 +88,10 @@ the chosen API server hadn't completely started yet...
 
 ### MySql column size wrong
 
-https://bugs.launchpad.net/faafo/+bug/1496687 (fix submitted that has now been deployed into FAAFO proper.
+Reported:
+
+https://bugs.launchpad.net/faafo/+bug/1496687 
+
+And submitted a fix submitted that has now been deployed into FAAFO proper.
 
 
