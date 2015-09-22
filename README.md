@@ -66,47 +66,21 @@ To restart it:
 /etc/init.d/mysql restart
 ```
 
-And a handy piece of sql to fix the bug...
-
-```sql 
-alter table fractal modify image mediumblob;
-```
-
-
-## Defects
+## Thoughts
 
 ### Brittle workers
 
 Worker only pushes images back to single api server: all workers are given the same api server to PUT the images to.
 If the api server dies, the images aren't PUT back to the api server. This is brittle, and doesn't scale.
 
-### Queue service bug
-
-There is some sort of bug when run over the queue service.
-
-Some of the images are corrupted. To show this, change `/usr/local/lib/python2.7/dist-packages/faafo/api/service.py`
-line 114 to:
-
-```python
-missing_padding = 4 - len(fractal.image) % 4
-if missing_padding:
-    fractal.image += b'='* missing_padding
-image_data = base64.b64decode(fractal.image)
-```
-
-And also in `/usr/local/lib/python2.7/dist-packages/PIL/ImageFile.py` set `LOAD_TRUNCATED_IMAGES` to `True`.
-
-The file on the worker side seems to be perfectly well formed...
-
-This is caused by the following:
-https://github.com/celery/celery/issues/461
-
-The mysql database image column is not large enough to deal with some of the fractal images and thus truncates them.
 
 ### Worker bug
 
 When starting up multiple workers, if you kill a worker, some of the images are not rendered. This could be because
 the chosen API server hadn't completely started yet...
 
+### MySql column size wrong
+
+https://bugs.launchpad.net/faafo/+bug/1496687 (fix submitted that has now been deployed into FAAFO proper.
 
 
