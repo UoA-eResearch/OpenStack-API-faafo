@@ -25,13 +25,19 @@ And there is at least one of those that I know....
 It also creates an IP address in the pool of floating IP's: and then ignores it if there is a public IP... Surely in
 this case it just shouldn't bother with creating an IP in the pool of floating IP addresses?
 
+So I've modified it: [chapter1.py]
+
 ## Chapter 2: Introduction to the fractals application architecture
 
 I removed some of the boilerplate from Chapter 1 and introduces a method to allocate the IP number.
 
+[chapter2.py]
+
 ## Chapter 3: Scaling out
 
 I've removed some of the boilerplate from Chapter 1 and introduced several more methods.
+
+[chapter3.py]
 
 ## Chapter 6: Orchestration
 
