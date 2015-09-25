@@ -1,0 +1,366 @@
+# http://docs.openstack.org/developer/heat/template_guide/hot_spec.html#heat-template-version
+heat_template_version: 2014-10-16
+
+# This template adds the ability to autoscale the workers to chapter three's code...
+# I don't recreate the network stuff as the cloud available to me doesn't have that functionality
+
+description: |
+  A template to bring up the faafo application as an autoscaling one
+
+
+parameters:
+
+  key_name:
+    type: string
+    description: Name of an existing KeyPair to enable SSH access to the instances
+    constraints:
+      - custom_constraint: nova.keypair
+        description: Must already exist on your cloud
+
+  instance_type:
+    type: string
+    description: The flavour the webserver is to run on
+    constraints:
+      - custom_constraint: nova.flavor
+        description:  Must be a valid flavour provided by your cloud provider.
+
+  image_id:
+    type: string
+    description: ID of the image to use for the instance to be created
+    constraints:
+      - custom_constraint: glance.image
+        description: Must be a valid image on your cloud
+
+  faafo_source:
+    type: string
+    description: The http location of the faafo application install script
+    default: http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh
+
+
+resources:
+
+  api:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For services that run on an api node"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+
+  worker:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For services that run on a worker node"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+
+  controller:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For services that run on a worker node"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "5672"
+          ToPort: "5672"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: worker }
+
+  services:
+    type: "AWS::EC2::SecurityGroup"
+    properties:
+      GroupDescription: "For DB and AMPQ services only"
+      SecurityGroupIngress:
+        -
+          IpProtocol: "tcp"
+          FromPort: "80"
+          ToPort: "80"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "22"
+          ToPort: "22"
+          CidrIp: "0.0.0.0/0"
+        -
+          IpProtocol: "tcp"
+          FromPort: "5672"
+          ToPort: "5672"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: worker }
+        -
+          IpProtocol: "tcp"
+          FromPort: "5672"
+          ToPort: "5672"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: api }
+        -
+          IpProtocol: "tcp"
+          FromPort: "3306"
+          ToPort: "3306"
+          CidrIp: "0.0.0.0/0"
+          SourceSecurityGroupName: { get_resource: api }
+
+  app-services:
+    # The database and the AMPQ services run on this machine.
+    type: OS::Nova::Server
+    properties:
+      image: { get_param: image_id }
+      flavor: { get_param: instance_type }
+      key_name: { get_param: key_name }
+      security_groups:
+        - {get_resource: services}
+      user_data_format: RAW
+      user_data:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s faafo_installer | bash -s -- \
+            -i database -i messaging
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['worker_wait_handle', 'curl_cli'] }
+            faafo_installer: { get_param: faafo_source }
+
+  api_launch_config:
+    # The web interface is setup here
+    type: AWS::AutoScaling::LaunchConfiguration
+    properties:
+      ImageId: { get_param: image_id }
+      InstanceType: { get_param: instance_type }
+      KeyName: { get_param: key_name }
+      SecurityGroups:
+        - {get_resource: api}
+      UserData:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s faafo_installer | bash -s -- \
+            -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
+            -d 'mysql+pymysql://faafo:password@services_ip:3306/faafo'
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['worker_wait_handle', 'curl_cli'] }
+            services_ip: { get_attr: [app-services, first_address] }
+            faafo_installer: { get_param: faafo_source }
+
+  elastic_load_blancer:
+    type: AWS::ElasticLoadBalancing::LoadBalancer
+    properties:
+      AvailabilityZones: [melbourne, monash, QRIScloud, NCI, intersect, sa, tasmania ]
+      Listeners:
+        - { LoadBalancerPort: '80', InstancePort: '80', Protocol: HTTP }
+      HealthCheck: {Target: 'HTTP:80/', HealthyThreshold: '3', UnhealthyThreshold: '5', Interval: '30', Timeout: '5'}
+
+  server_group_api:
+    type: AWS::AutoScaling::AutoScalingGroup
+    properties:
+      AvailabilityZones: [melbourne, monash, QRIScloud, NCI, intersect, sa, tasmania ]
+      LaunchConfigurationName: { get_resource: api_launch_config }
+      MinSize: '1'
+      MaxSize: '3'
+      LoadBalancerNames:
+        - { get_resource: elastic_load_blancer }
+      Tags:
+        - { Key: metering.server_group, Value: server_group_api }
+
+  api_scale_up_policy:
+    type: AWS::AutoScaling::ScalingPolicy
+    properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: { get_resource: server_group_api }
+      Cooldown: '300'
+      ScalingAdjustment: '1'
+
+  api_scale_down_policy:
+    type: AWS::AutoScaling::ScalingPolicy
+    properties:
+      AdjustmentType: ChangeInCapacity
+      AutoScalingGroupName: {get_resource: server_group_api}
+      Cooldown: '60'
+      ScalingAdjustment: '-1'
+
+  api_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 5 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: '300'
+      evaluation_periods: '1'
+      threshold: '50'
+      alarm_actions:
+        - { get_attr: [api_scale_up_policy, AlarmUrl] }
+      matching_metadata: { 'metadata.user_metadata.AutoScalingGroupName': { get_resource: 'server_group_api' } }
+      comparison_operator: gt
+
+  api_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 5 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: '300'
+      evaluation_periods: '1'
+      threshold: '15'
+      alarm_actions:
+        - { get_attr: [api_scale_down_policy, AlarmUrl] }
+      matching_metadata: { 'metadata.user_metadata.AutoScalingGroupName': { get_resource: 'server_group_api' } }
+      comparison_operator: lt
+
+  worker_init:
+    # manages the workers
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: ungrouped
+      config:
+        str_replace:
+          template: |
+            #!/usr/bin/env bash
+            curl -L -s faafo_installer | bash -s -- \
+            -i faafo -r worker -e 'http://api_1_ip' -m 'amqp://guest:guest@services_ip:5672/'
+            wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            wc_notify: { get_attr: ['worker_wait_handle', 'curl_cli'] }
+            api_1_ip: { get_attr: [elastic_load_blancer, DNSName] }
+            services_ip: { get_attr: [app-services, first_address] }
+            faafo_installer: { get_param: faafo_source }
+
+  worker_init_userdata:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+        - config: {get_resource: worker_init}
+
+  scaling_group_worker:
+    type: OS::Heat::AutoScalingGroup
+    properties:
+      resource:
+        type: OS::Nova::Server
+        properties:
+          key_name: { get_param: key_name }
+          image: { get_param: image_id }
+          flavor: { get_param: instance_type }
+          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
+          security_groups:
+            - {get_resource: worker}
+          user_data_format: RAW
+          user_data: { get_resource: worker_init_userdata }
+      min_size: 1
+      desired_capacity: 1
+      max_size: 3
+
+  worker_wait_handle:
+    type: OS::Heat::WaitConditionHandle
+
+  worker_scale_up_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: scaling_group_worker}
+      cooldown: 300
+      scaling_adjustment: 1
+
+  worker_scale_down_policy:
+    type: OS::Heat::ScalingPolicy
+    properties:
+      adjustment_type: change_in_capacity
+      auto_scaling_group_id: {get_resource: scaling_group_worker}
+      cooldown: 60
+      scaling_adjustment: '-1'
+
+  worker_alarm_high:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-up if the average CPU > 50% for 5 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 300
+      evaluation_periods: 1
+      threshold: 50
+      alarm_actions:
+        - {get_attr: [worker_scale_up_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: gt
+
+  worker_alarm_low:
+    type: OS::Ceilometer::Alarm
+    properties:
+      description: Scale-down if the average CPU < 15% for 5 minutes
+      meter_name: cpu_util
+      statistic: avg
+      period: 300
+      evaluation_periods: 1
+      threshold: 15
+      alarm_actions:
+        - {get_attr: [worker_scale_down_policy, alarm_url]}
+      matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      comparison_operator: lt
+
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    depends_on: [ app-services, server_group_api, worker_init ]
+    properties:
+      handle: { get_resource: worker_wait_handle }
+      # we will have all 3 initial servers clock in when they are finished installing their software
+      count: 3
+      # we'll give it 10 minutes
+      timeout: 600
+
+
+outputs:
+
+  api_url:
+    description: URL for api lb
+    value:
+      list_join: ['', ['http://', get_attr: [elastic_load_blancer, DNSName]]]
+
+  services_ip:
+    description: The db and ampq services
+    value:
+      list_join: ['', ['Are at: ', get_attr: [app-services, first_address]]]
+
+  scale_api_up_url:
+    description: >
+      This URL is the webhook to scale the api group up. Invoke by doing an HTTP POST to this URL.
+      No body or other headers is needed. But do put quotes around the url!
+    value: {get_attr: [api_scale_up_policy, AlarmUrl]}
+
+  scale_api_down_url:
+    description: >
+      This URL is the webhook to scale the worker group down. Invoke by doing an HTTP POST to this URL.
+      No body or other headers is needed. But do put quotes around the url
+    value: {get_attr: [api_scale_down_policy, AlarmUrl]}
+
+  scale_workers_up_url:
+    description: >
+      This URL is the webhook to scale the worker group up. Invoke by doing an HTTP POST to this URL.
+      No body or other headers is needed. But do put quotes around the url!
+    value: {get_attr: [worker_scale_up_policy, alarm_url]}
+
+  scale_workers_down_url:
+    description: >
+      This URL is the webhook to scale the worker group down. Invoke by doing an HTTP POST to this URL.
+      No body or other headers is needed. But do put quotes around the url
+    value: {get_attr: [worker_scale_down_policy, alarm_url]}
