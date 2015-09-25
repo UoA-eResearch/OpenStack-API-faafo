@@ -15,6 +15,9 @@ The source for the previous documentation:
 
 * https://github.com/openstack/api-site/tree/master/firstapp
 
+Netflix have an interesting article on architecture here:
+https://www.nginx.com/blog/microservices-at-netflix-architectural-best-practices/
+
 # Notes
 
 ## Chapter 1: Getting started
@@ -51,9 +54,6 @@ I've added two templates so far:
 I put the configuration into a config file, so that I can share it amongst files, and not accidentally 
 check it into source control.
 
-There is a defect whereby a newly started instance doesn't have it's private IP address available in the returned
-instance data?
-
 I've added a script to [tear down](teardown.py) the infrastructure set up in chapters 1 through 3 
 
 ## Useful bits
@@ -87,10 +87,10 @@ Worker only pushes images back to single api server: all workers are given the s
 If the api server dies, the images aren't PUT back to the api server. This is brittle, and doesn't scale.
 
 
-### Worker bug
+### Workers
 
-When starting up multiple workers, if you kill a worker, some of the images are not rendered. This could be because
-the chosen API server hadn't completely started yet...
+When you start up and delete workers, the queue might take a while to regroup. But it eventually does: and you get
+your images...
 
 ### MySql column size wrong
 
