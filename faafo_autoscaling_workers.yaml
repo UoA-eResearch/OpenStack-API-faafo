@@ -5,7 +5,7 @@ heat_template_version: 2014-10-16
 # I don't recreate the network stuff as the cloud available to me doesn't have that functionality
 
 description: |
-  A template to bring up the faafo application as per chapter 3's code
+  A template to bring up the faafo application with autoscaling workers
 
 
 parameters:
@@ -30,6 +30,11 @@ parameters:
     constraints:
       - custom_constraint: glance.image
         description: Must be a valid image on your cloud
+
+  faafo_source:
+    type: string
+    description: The http location of the faafo application install script
+    default: http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh
 
 
 resources:
@@ -131,11 +136,12 @@ resources:
         str_replace:
           template: |
             #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            curl -L -s faafo_installer | bash -s -- \
             -i database -i messaging
             wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+            faafo_installer: { get_param: faafo_source }
 
   api_init:
     type: OS::Heat::SoftwareConfig
@@ -145,13 +151,14 @@ resources:
         str_replace:
           template: |
             #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            curl -L -s faafo_installer | bash -s -- \
             -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
-            -d 'mysql://faafo:password@services_ip:3306/faafo'
+            -d 'mysql+pymysql://faafo:password@services_ip:3306/faafo'
             wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
             services_ip: { get_attr: [app-services, first_address] }
+            faafo_installer: { get_param: faafo_source }
 
   api_init_userdata:
     type: OS::Heat::MultipartMime
@@ -191,13 +198,14 @@ resources:
         str_replace:
           template: |
             #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            curl -L -s faafo_installer | bash -s -- \
             -i faafo -r worker -e 'http://api_1_ip' -m 'amqp://guest:guest@services_ip:5672/'
             wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
             api_1_ip: { get_attr: [instance_api_1, first_address] }
             services_ip: { get_attr: [app-services, first_address] }
+            faafo_installer: { get_param: faafo_source }
 
   worker_init_userdata:
     type: OS::Heat::MultipartMime
@@ -210,11 +218,11 @@ resources:
     properties:
       resource:
         type: OS::Nova::Server
-        metadata: {"metering.stack": {get_param: "OS::stack_id"}}
         properties:
+          key_name: { get_param: key_name }
           image: { get_param: image_id }
           flavor: { get_param: instance_type }
-          key_name: { get_param: key_name }
+          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
           security_groups:
             - {get_resource: worker}
           user_data_format: RAW
@@ -241,7 +249,7 @@ resources:
     properties:
       adjustment_type: change_in_capacity
       auto_scaling_group_id: {get_resource: worker_auto_scaling_group}
-      cooldown: 60
+      cooldown: 300
       scaling_adjustment: 1
 
   scale_down_policy:
@@ -249,16 +257,16 @@ resources:
     properties:
       adjustment_type: change_in_capacity
       auto_scaling_group_id: {get_resource: worker_auto_scaling_group}
-      cooldown: 60
+      cooldown: 300
       scaling_adjustment: '-1'
 
   cpu_alarm_high:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-up if the average CPU > 50% for 10 minute
+      description: Scale-up if the average CPU > 50% for 5 minutes
       meter_name: cpu_util
       statistic: avg
-      period: 600
+      period: 300
       evaluation_periods: 1
       threshold: 50
       alarm_actions:
@@ -269,15 +277,16 @@ resources:
   cpu_alarm_low:
     type: OS::Ceilometer::Alarm
     properties:
-      description: Scale-down if the average CPU < 15% for 10 minutes
+      description: Scale-down if the average CPU < 15% for 5 minutes
       meter_name: cpu_util
       statistic: avg
-      period: 600
+      period: 300
       evaluation_periods: 1
       threshold: 15
       alarm_actions:
         - {get_attr: [scale_down_policy, alarm_url]}
       matching_metadata: {'metadata.user_metadata.stack': {get_param: "OS::stack_id"}}
+      # matching_metadata: {'metadata.metering.stack': {get_param: "OS::stack_id"}}
       comparison_operator: lt
 
 outputs:
@@ -307,13 +316,13 @@ outputs:
 
   scale__workers_up_url:
     description: >
-      This URL is the webhook to scale the group up. Invoke by doing an HTTP POST to this URL.
+      This URL is the webhook to scale the worker group up. Invoke by doing an HTTP POST to this URL.
       No body or other headers is needed. But do put quotes around the url!
     value: {get_attr: [scale_up_policy, alarm_url]}
 
   scale_workers_down_url:
     description: >
-      This URL is the webhook to scale the group down. Invoke by doing an HTTP POST to this URL.
+      This URL is the webhook to scale the worker group down. Invoke by doing an HTTP POST to this URL.
       No body or other headers is needed. But do put quotes around the url
     value: {get_attr: [scale_down_policy, alarm_url]}
 
