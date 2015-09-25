@@ -160,7 +160,7 @@ print('Instance services will be available for ssh at: //{}'.format(services_ip)
 api_userdata = '''#!/usr/bin/env bash
 curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
     -i faafo -r api -m 'amqp://guest:guest@%(services_ip)s:5672/' \
-    -d 'mysql://faafo:password@%(services_ip)s:3306/faafo'
+    -d 'mysql+pymysql://faafo:password@%(services_ip)s:3306/faafo'
 ''' % {'services_ip': services_ip}
 
 instance_api_1 = launch_instance('app-api-1', api_userdata, api_group)
