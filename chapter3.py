@@ -11,6 +11,7 @@
 #           before it is accessed.
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
+from libcloud.common.exceptions import BaseHTTPError
 
 try:
     import configparser
@@ -138,8 +139,8 @@ def attach_ip_number(target_instance):
                 pool = conn.ex_list_floating_ip_pools()[0]
                 print('Allocating new Floating IP from pool: {}'.format(pool))
                 unused_floating_ip = pool.create_floating_ip()
-            except IndexError:
-                print('There are no Floating IP\'s found')
+            except (IndexError, BaseHTTPError) as e:
+                print('There are no unused Floating IP\'s found! Message: {}'.format(e))
         if unused_floating_ip:
             conn.ex_attach_floating_ip_to_node(target_instance, unused_floating_ip)
             result = unused_floating_ip.ip_address

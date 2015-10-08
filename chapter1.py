@@ -10,6 +10,7 @@
 # step-1
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
+from libcloud.common.exceptions import BaseHTTPError
 
 try:
     import configparser
@@ -141,6 +142,7 @@ print (testing_instance)
 
 ip_address = None
 
+# Find the IP address to use
 # Default to the private IP if, there is one.
 if len(testing_instance.private_ips) > 0:
     ip_address = testing_instance.private_ips[0]
@@ -166,8 +168,8 @@ else:
             pool = conn.ex_list_floating_ip_pools()[0]
             print('Allocating new Floating IP from pool: {}'.format(pool))
             unused_floating_ip = pool.create_floating_ip()
-        except IndexError:
-            print('There are no unused Floating IP\'s found!')
+        except (IndexError, BaseHTTPError) as e:
+            print('There are no unused Floating IP\'s found! Message: {}'.format(e))
     if unused_floating_ip:
         conn.ex_attach_floating_ip_to_node(testing_instance, unused_floating_ip)
         ip_address = unused_floating_ip.ip_address
