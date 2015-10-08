@@ -19,7 +19,7 @@ parameters:
 
   instance_type:
     type: string
-    description: The flavour the webserver is to run on
+    description: The flavour the application is to use
     constraints:
       - custom_constraint: nova.flavor
         description:  Must be a valid flavour provided by your cloud provider.
