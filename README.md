@@ -28,33 +28,35 @@ And there is at least one of those that I know....
 It also creates an IP address in the pool of floating IP's: and then ignores it if there is a public IP... Surely in
 this case it just shouldn't bother with creating an IP in the pool of floating IP addresses?
 
-So I've modified it: [chapter1.py](chapter1.py)
+So I've modified it: [chapter1.py](src/chapter1.py)
 
 ## Chapter 2: Introduction to the fractals application architecture
 
 I removed some of the boilerplate from Chapter 1 and introduces a method to allocate the IP number.
 
-[chapter2.py](chapter2.py)
+[chapter2.py](src/chapter2.py)
 
 ## Chapter 3: Scaling out
 
 I've removed some of the boilerplate from Chapter 1 and introduced several more methods.
 
-[chapter3.py](chapter3.py)
+[chapter3.py](src/chapter3.py)
 
 ## Chapter 6: Orchestration
 
-I've added two templates so far: 
+I've added four templates so far: 
 
-* [FAAFO](faafo.yaml): a straight port of chapter 3's code.
-* [FAAFO with autoscaling workers](faafo_autoscaling_workers.yaml): the workers are now part of an autoscaling group.
+* [faafo_all_in_one.yaml](heat/faafo_all_in_one.yaml): a straight port of chapter 1's code.
+* [faafo_exploded.yaml](heat/faafo_exploded.yaml): a straight port of chapter 3's code.
+* [faafo_autoscaling_workers.yaml](heat/faafo_autoscaling_workers.yaml): the workers are now part of an autoscaling group.
+* [faafo_exploded.yaml](heat/faafo_exploded.yaml): both the workers and the api now autoscale.
 
 ## In general
 
 I put the configuration into a config file, so that I can share it amongst files, and not accidentally 
 check it into source control.
 
-I've added a script to [tear down](teardown.py) the infrastructure set up in chapters 1 through 3 
+I've added a script to [tear down](src/teardown.py) the infrastructure set up in chapters 1 through 3 
 
 ## Useful bits
 
@@ -84,8 +86,8 @@ To restart it:
 ### Brittle workers
 
 Worker only pushes images back to single api server: all workers are given the same api server to PUT the images to.
-If the api server dies, the images aren't PUT back to the api server. This is brittle, and doesn't scale.
-
+If the api server dies, the images aren't PUT back to the api server. This is brittle, and doesn't scale. However,
+if your api servers have a load balancer in front of them it works well.
 
 ### Workers
 
