@@ -1,9 +1,9 @@
 # Attribution
 
-<img width="300" alt="St Breock Down Monolith - Standing Stone - geograph.org.uk - 109844" src="images/St_Breock_Down_Monolith.jpg"/>
+<img width="300" alt="St Breock Down Monolith - Standing Stone - geograph.org.uk - 109844" src="St_Breock_Down_Monolith.jpg"/>
 <a title="CATHERINE PRIOR [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons" 
 href="https://commons.wikimedia.org/wiki/File%3ASt_Breock_Down_Monolith_-_Standing_Stone_-_geograph.org.uk_-_109844.jpg">
-<img alt="St Breock Down Monolith - Standing Stone - geograph.org.uk - 109844" src="images/St_Breock_Down_Monolith.jpg"/>
+<img alt="St Breock Down Monolith - Standing Stone - geograph.org.uk - 109844" src="St_Breock_Down_Monolith.jpg"/>
 </a>
 
 By CATHERINE PRIOR [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)
