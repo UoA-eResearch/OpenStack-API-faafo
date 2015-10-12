@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>NeCTAR Cloud Lessons</title>
+
+    <meta name="description" content="Slides for an introductory course on the NeCTAR cloud.">
+    <meta name="author" content="Martin Paulo">
+
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="revealjs/css/reveal.css">
+    <link rel="stylesheet" href="revealjs/css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="revealjs/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'revealjs/css/print/pdf.css' : 'revealjs/css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="revealjs/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+<style type="text/css">.reveal ol {list-style-type: upper-alpha;}</style>
+<section data-markdown><script type="text/template">
+
+## In the beginning
+
+### The monolith
+
+<a title="CATHERINE PRIOR [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons" 
+href="https://commons.wikimedia.org/wiki/File%3ASt_Breock_Down_Monolith_-_Standing_Stone_-_geograph.org.uk_-_109844.jpg">
+<img alt="St Breock Down Monolith - Standing Stone - geograph.org.uk - 109844" src="images/St_Breock_Down_Monolith.jpg"/>
+</a>
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Which decomposed
+
+### Horizontally and vertically
+
+<a title="By Bernard Gagnon (Own work) [GFDL (http://www.gnu.org/copyleft/fdl.html) or CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" 
+href="https://commons.wikimedia.org/wiki/File%3AStonehenge_02.jpg">
+<img alt="Stonehenge 02" src="images/512px-Stonehenge_02.jpg"/></a>
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Then came the cloud
+
+### Unconstrained supply
+
+<a title="By Joydeep (Own work) [CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" 
+href="https://commons.wikimedia.org/wiki/File%3ACumulus_cloud_before_rain.jpg">
+<img alt="Cumulus cloud before rain" src="images/Cumulus_cloud_before_rain.jpg"/></a>
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## There was a period of Instability
+
+### While we learned
+
+<a title="By Nevit Dilmen (Own work) [GFDL (http://www.gnu.org/copyleft/fdl.html) or CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0/)], via Wikimedia Commons" 
+href="https://commons.wikimedia.org/wiki/File%3AUnstable_walk.jpg">
+<img alt="Unstable walk" src="images/Unstable_walk.jpg"/></a>
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## But convergence came
+
+### With 'microservices'
+
+<a href="https://commons.wikimedia.org/wiki/File:Cairn_at_Garvera,_Surselva,_Graubuenden,_Switzerland.jpg#/media/File:Cairn_at_Garvera,_Surselva,_Graubuenden,_Switzerland.jpg">
+<img alt="Cairn at Garvera, Surselva, Graubuenden, Switzerland.jpg" src="images/Cairn.jpg"></a>
+
+Licensed under <a title="Creative Commons Attribution-Share Alike 3.0" 
+href="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a> via 
+<a href="//commons.wikimedia.org/wiki/">Wikimedia Commons</a>.
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# A microservice
+
+The entire team can be fed by two large Pizza's
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Microservice goodness
+
+* Scaling
+* Modularity
+* Change the parts independently
+* Allow mix of technologies
+* Ease development (can add developers!)
+* Fault tolerant
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Microservice badness
+
+* Increased complexity
+* More support
+* Application speed
+* Decentralized data
+* Lock you into integration choices
+* More points of failure
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# A sample application
+
+## FAAFO
+
+[First App Application For OpenStack](https://github.com/stackforge/faafo)
+
+A handy dandy fractal generator
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# To explore it we need to run it...
+
+So: 
+
+[libcloud 0.15.1 or higher](https://libcloud.apache.org/getting-started.html)
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 1: establish a connection
+
+```python
+provider = get_driver(Provider.OPENSTACK)
+conn = provider(auth_username,
+                auth_password,
+                ex_force_auth_url=auth_url,
+                ex_force_auth_version='2.0_password',
+                ex_tenant_name=project_name,
+                ex_force_service_region=region_name)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 2: list the images
+
+```python
+images = conn.list_images()
+for image in images:
+    print(image)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 3: list the flavors
+
+```python
+flavors = conn.list_sizes()
+for flavor in flavors:
+    print(flavor)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 4: get an image
+
+```python
+image_id = config.get('Cloud', 'image_id')
+image = conn.get_image(image_id)
+print(image)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 5: get a flavor
+
+```python
+flavor_id = config.get('Cloud', 'flavor_id')
+flavor = conn.ex_get_size(flavor_id)
+print(flavor)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 6: create a test instance
+
+```python
+instance_name = 'faafo'
+testing_instance = conn.create_node(name=instance_name, image=image, size=flavor)
+print(testing_instance)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 7: confirm its running
+
+```python
+instances = conn.list_nodes()
+for instance in instances:
+    print(instance)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 8: destroy the test instance
+
+```python
+conn.destroy_node(testing_instance)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 9:
+
+```python
+print('Checking for existing SSH key pair...')
+keypair_name = config.get('Credentials', 'keypair_name')
+pub_key_file = config.get('Credentials', 'pub_key_file')
+keypair_exists = False
+for keypair in conn.list_key_pairs():
+    if keypair.name == keypair_name:
+        keypair_exists = True
+
+if keypair_exists:
+    print('Keypair {} already exists. Skipping import'.format(keypair_name))
+else:
+    print('adding keypair...')
+    conn.import_key_pair_from_file(keypair_name, pub_key_file)
+
+for keypair in conn.list_key_pairs():
+    print(keypair)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 10:
+ 
+```python
+print('Checking for existing security group...')
+security_group_name = 'all-in-one'
+security_group_exists = False
+for security_group in conn.ex_list_security_groups():
+    if security_group.name == security_group_name:
+        all_in_one_security_group = security_group
+        security_group_exists = True
+
+if security_group_exists:
+    print('Security Group {} already exists. Skipping creation'.format(all_in_one_security_group.name))
+else:
+    all_in_one_security_group = conn.ex_create_security_group(security_group_name,
+                                                              'network access for all-in-one application.')
+    conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 80, 80)
+    conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 22, 22)
+
+for security_group in conn.ex_list_security_groups():
+    print(security_group)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 11: 
+
+```python
+userdata = '''#!/usr/bin/env bash
+curl -L -s https://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+    -i faafo -i messaging -r api -r worker -r demo
+'''
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Step 12:
+
+```python
+print('Checking for existing instance...')
+instance_name = 'all-in-one'
+instance_exists = False
+for instance in conn.list_nodes():
+    if instance.name == instance_name:
+        testing_instance = instance
+        instance_exists = True
+
+if instance_exists:
+    print('Instance {} already exists. Skipping creation'.format(testing_instance.name))
+else:
+    print('Creating new instance')
+    testing_instance = conn.create_node(name=instance_name,
+                                        image=image,
+                                        size=flavor,
+                                        ex_keyname=keypair_name,
+                                        ex_userdata=userdata,
+                                        ex_security_groups=[all_in_one_security_group])
+    conn.wait_until_running([testing_instance])
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# fix for bug 
+
+Where the instance isn't immediately updated with the instance data
+
+```python
+for instance in conn.list_nodes():
+    if instance.id == testing_instance.id:
+        testing_instance = instance
+
+print (testing_instance)
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# FAAFO architecture
+
+![Faafo](images/Faafo.png)
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# The path to follow
+
+* Build the simplest thing that can work (a monolith)
+* Make sure it's got well defined internal boundaries
+* When confident you are on the right path, turn it into a neomonolith...
+* The start to split out the microservices as you grow
+
+</script></section>
+<!-- Slides go here -->
+    </div>
+
+</div>
+
+<script src="revealjs/lib/js/head.min.js"></script>
+<script src="revealjs/js/reveal.js"></script>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'revealjs/lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'revealjs/plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'revealjs/plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'revealjs/plugin/highlight/highlight.js', async: true, condition: function () {
+                return !!document.querySelector('pre code');
+            }, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'revealjs/plugin/zoom-js/zoom.js', async: true},
+            {src: 'revealjs/plugin/notes/notes.js', async: true}
+        ]
+    });
+
+</script>
+
+</body>
+</html>
