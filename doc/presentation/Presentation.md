@@ -1,75 +1,76 @@
 -- *Slide* --
 
-# In the beginning
+## In the beginning
 
-## The monolith
+### The monolith
 
 <a title="CATHERINE PRIOR [CC BY-SA 2.0 (http://creativecommons.org/licenses/by-sa/2.0)], via Wikimedia Commons" 
 href="https://commons.wikimedia.org/wiki/File%3ASt_Breock_Down_Monolith_-_Standing_Stone_-_geograph.org.uk_-_109844.jpg">
 <img alt="St Breock Down Monolith - Standing Stone - geograph.org.uk - 109844" src="images/St_Breock_Down_Monolith.jpg"/>
 </a>
 
--- *Slide* --
-
 -- *Slide End* --
 
-# Which decomposed
+-- *Slide* --
 
-## Horizontally and vertically
+## Which decomposed
+
+### Horizontally and vertically
 
 <a title="By Bernard Gagnon (Own work) [GFDL (http://www.gnu.org/copyleft/fdl.html) or CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" 
 href="https://commons.wikimedia.org/wiki/File%3AStonehenge_02.jpg">
 <img alt="Stonehenge 02" src="images/512px-Stonehenge_02.jpg"/></a>
 
--- *Slide* --
-
 -- *Slide End* --
 
-# Then came the cloud
+-- *Slide* --
 
-## Unconstrained supply
+## Then came the cloud
+
+### Unconstrained supply
 
 <a title="By Joydeep (Own work) [CC BY-SA 3.0 (http://creativecommons.org/licenses/by-sa/3.0)], via Wikimedia Commons" 
 href="https://commons.wikimedia.org/wiki/File%3ACumulus_cloud_before_rain.jpg">
 <img alt="Cumulus cloud before rain" src="images/Cumulus_cloud_before_rain.jpg"/></a>
 
--- *Slide* --
-
 -- *Slide End* --
 
-# There was a period of Instability
+-- *Slide* --
 
-## While we learned
+## There was a period of Instability
+
+### While we learned
 
 <a title="By Nevit Dilmen (Own work) [GFDL (http://www.gnu.org/copyleft/fdl.html) or CC-BY-SA-3.0 (http://creativecommons.org/licenses/by-sa/3.0/)], via Wikimedia Commons" 
 href="https://commons.wikimedia.org/wiki/File%3AUnstable_walk.jpg">
 <img alt="Unstable walk" src="images/Unstable_walk.jpg"/></a>
 
--- *Slide* --
-
 -- *Slide End* --
 
-# But convergence came
+-- *Slide* --
 
-## With 'microservices'
+## But convergence came
+
+### With 'microservices'
 
 <a href="https://commons.wikimedia.org/wiki/File:Cairn_at_Garvera,_Surselva,_Graubuenden,_Switzerland.jpg#/media/File:Cairn_at_Garvera,_Surselva,_Graubuenden,_Switzerland.jpg">
 <img alt="Cairn at Garvera, Surselva, Graubuenden, Switzerland.jpg" src="images/Cairn.jpg"></a>
 
-Licensed under <a title="Creative Commons Attribution-Share Alike 3.0
-<p></p>" href="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a> via <a href="//commons.wikimedia.org/wiki/">Wikimedia Commons</a>.</p>
-
--- *Slide* --
+Licensed under <a title="Creative Commons Attribution-Share Alike 3.0" 
+href="http://creativecommons.org/licenses/by-sa/3.0/">CC BY-SA 3.0</a> via 
+<a href="//commons.wikimedia.org/wiki/">Wikimedia Commons</a>.
 
 -- *Slide End* --
+
+-- *Slide* --
 
 # A microservice
 
 The entire team can be fed by two large Pizza's
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Microservice goodness
 
@@ -80,9 +81,9 @@ The entire team can be fed by two large Pizza's
 * Ease development (can add developers!)
 * Fault tolerant
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Microservice badness
 
@@ -93,9 +94,9 @@ The entire team can be fed by two large Pizza's
 * Lock you into integration choices
 * More points of failure
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # A sample application
 
@@ -105,9 +106,9 @@ The entire team can be fed by two large Pizza's
 
 A handy dandy fractal generator
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # To explore it we need to run it...
 
@@ -115,22 +116,13 @@ So:
 
 [libcloud 0.15.1 or higher](https://libcloud.apache.org/getting-started.html)
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 1: establish a connection
 
 ```python
-from libcloud.compute.types import Provider
-from libcloud.compute.providers import get_driver
-
-auth_username = 'your_auth_username'
-auth_password = 'your_auth_password'
-auth_url = 'https://keystone.rc.nectar.org.au:5000/v2.0/tokens/'
-project_name = 'your_project_name_or_id'
-region_name = 'your_region_name'
-
 provider = get_driver(Provider.OPENSTACK)
 conn = provider(auth_username,
                 auth_password,
@@ -140,9 +132,9 @@ conn = provider(auth_username,
                 ex_force_service_region=region_name)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 2: list the images
 
@@ -152,9 +144,9 @@ for image in images:
     print(image)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 3: list the flavors
 
@@ -164,9 +156,9 @@ for flavor in flavors:
     print(flavor)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 4: get an image
 
@@ -176,9 +168,9 @@ image = conn.get_image(image_id)
 print(image)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 5: get a flavor
 
@@ -188,9 +180,9 @@ flavor = conn.ex_get_size(flavor_id)
 print(flavor)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 6: create a test instance
 
@@ -200,9 +192,9 @@ testing_instance = conn.create_node(name=instance_name, image=image, size=flavor
 print(testing_instance)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 7: confirm its running
 
@@ -212,9 +204,9 @@ for instance in instances:
     print(instance)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 8: destroy the test instance
 
@@ -222,9 +214,9 @@ for instance in instances:
 conn.destroy_node(testing_instance)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 9:
 
@@ -247,9 +239,9 @@ for keypair in conn.list_key_pairs():
     print(keypair)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 10:
  
@@ -274,9 +266,9 @@ for security_group in conn.ex_list_security_groups():
     print(security_group)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 11: 
 
@@ -287,9 +279,9 @@ curl -L -s https://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install
 '''
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # Step 12:
 
@@ -315,9 +307,9 @@ else:
     conn.wait_until_running([testing_instance])
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # fix for bug 
 
@@ -331,17 +323,17 @@ for instance in conn.list_nodes():
 print (testing_instance)
 ```
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # FAAFO architecture
 
 ![Faafo](images/Faafo.png)
 
--- *Slide* --
-
 -- *Slide End* --
+
+-- *Slide* --
 
 # The path to follow
 
@@ -349,3 +341,5 @@ print (testing_instance)
 * Make sure it's got well defined internal boundaries
 * When confident you are on the right path, turn it into a neomonolith...
 * The start to split out the microservices as you grow
+
+-- *Slide End* --
