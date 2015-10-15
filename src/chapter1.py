@@ -7,7 +7,6 @@
 #       Added a work around that solves the problem of instances not having their private IP properly populated
 #           before it is accessed.
 
-# step-1
 from libcloud.compute.types import Provider
 from libcloud.compute.providers import get_driver
 from libcloud.common.exceptions import BaseHTTPError
@@ -17,9 +16,12 @@ try:
 except ImportError:
     import ConfigParser
 
+# setup defaults
 config = ConfigParser.ConfigParser({'keypair_name': 'demokey', 'pub_key_file': '~/.ssh/id_rsa.pub'})
+# read the config file
 config.read('faafo.cfg')
 
+# step-1
 auth_username = config.get('Connection', 'auth_username')
 auth_password = config.get('Connection', 'auth_password')
 auth_url = config.get('Connection', 'auth_url')
@@ -55,18 +57,19 @@ flavor_id = config.get('Cloud', 'flavor_id')
 flavor = conn.ex_get_size(flavor_id)
 print(flavor)
 
-# step-6
-instance_name = 'faafo'
-testing_instance = conn.create_node(name=instance_name, image=image, size=flavor)
-print(testing_instance)
-
-# step-7
-instances = conn.list_nodes()
-for instance in instances:
-    print(instance)
-
-# step-8
-conn.destroy_node(testing_instance)
+# We don't want a room full of people colliding here...
+# # step-6
+# instance_name = 'faafo'
+# testing_instance = conn.create_node(name=instance_name, image=image, size=flavor)
+# print(testing_instance)
+#
+# # step-7
+# instances = conn.list_nodes()
+# for instance in instances:
+#     print(instance)
+#
+# # step-8
+# conn.destroy_node(testing_instance)
 
 # step-9
 print('Checking for existing SSH key pair...')

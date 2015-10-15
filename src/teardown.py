@@ -62,5 +62,6 @@ for instance in ('faafo', 'app-controller', 'app-worker-1', 'app-api-1',
 
 delete_instance(config.get('Names', 'all-in-one'))
 
-for group in ('all-in-one', 'worker', 'control', 'api', 'services'):
-    delete_security_group(group)
+# leave security groups for now
+# for group in ('all-in-one', 'worker', 'control', 'api', 'services'):
+#     delete_security_group(group)
