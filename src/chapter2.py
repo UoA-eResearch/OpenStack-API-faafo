@@ -36,7 +36,6 @@ conn = provider(auth_username,
                 ex_force_auth_version='2.0_password',
                 ex_force_service_region=region_name)
 
-
 image_id = config.get('Cloud', 'image_id')
 image = conn.get_image(image_id)
 print(image)
@@ -129,24 +128,24 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
     -i messaging -i faafo -r api
 '''
 
-instance_controller_1_name = config.get('Names', 'instance_controller_1_name')
-instance_controller_1 = conn.create_node(name=instance_controller_1_name,
-                                         image=image,
-                                         size=flavor,
-                                         ex_keyname=keypair_name,
-                                         ex_userdata=userdata,
-                                         ex_security_groups=[controller_group])
+instance_controller_name = config.get('Names', 'instance_controller_name')
+instance_controller = conn.create_node(name=instance_controller_name,
+                                       image=image,
+                                       size=flavor,
+                                       ex_keyname=keypair_name,
+                                       ex_userdata=userdata,
+                                       ex_security_groups=[controller_group])
 
-running = conn.wait_until_running([instance_controller_1])
+running = conn.wait_until_running([instance_controller])
 
 # fix for bug where by the instance isn't immediately updated with the instance data
 for instance in conn.list_nodes():
-    if instance.id == instance_controller_1.id:
-        instance_controller_1 = instance
-print(instance_controller_1)
+    if instance.id == instance_controller.id:
+        instance_controller = instance
+print(instance_controller)
 
-ip_controller = attach_ip_number(instance_controller_1)
-print('Instance {} will be deployed to http://{}'.format(instance_controller_1.name, ip_controller ))
+ip_controller = attach_ip_number(instance_controller)
+print('Instance {} will be deployed to http://{}'.format(instance_controller.name, ip_controller))
 
 print("Building worker")
 
@@ -155,21 +154,21 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
     -i faafo -r worker -e 'http://%(ip_controller)s' -m 'amqp://guest:guest@%(ip_controller)s:5672/'
 ''' % {'ip_controller': ip_controller}
 
-app_worker_1_name = config.get('Names', 'app_worker_1_name')
-instance_worker_1 = conn.create_node(name=app_worker_1_name,
-                                     image=image,
-                                     size=flavor,
-                                     ex_keyname=keypair_name,
-                                     ex_userdata=userdata,
-                                     ex_security_groups=[worker_group])
+app_worker_name = config.get('Names', 'app_worker_name')
+instance_worker = conn.create_node(name=app_worker_name,
+                                   image=image,
+                                   size=flavor,
+                                   ex_keyname=keypair_name,
+                                   ex_userdata=userdata,
+                                   ex_security_groups=[worker_group])
 
-conn.wait_until_running([instance_worker_1], ssh_interface='private_ips')
+conn.wait_until_running([instance_worker], ssh_interface='private_ips')
 
 # fix for bug where by the instance isn't immediately updated with the instance data
 for instance in conn.list_nodes():
-    if instance.id == instance_worker_1.id:
-        instance_worker_1 = instance
-print(instance_worker_1)
+    if instance.id == instance_worker.id:
+        instance_worker = instance
+print(instance_worker)
 
-ip_instance_worker_1 = attach_ip_number(instance_worker_1)
+ip_instance_worker_1 = attach_ip_number(instance_worker)
 print('The worker will be available for SSH at {}'.format(ip_instance_worker_1))
