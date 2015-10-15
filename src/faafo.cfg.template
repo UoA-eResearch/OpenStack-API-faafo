@@ -22,3 +22,10 @@ all-in-one =
 # chapter 2
 app_controller_name =
 app_worker_name =
+# chapter 3
+app-services =
+app-api-1 =
+app-api-2 =
+worker-1 =
+worker-2 =
+worker-3 =

@@ -100,7 +100,7 @@ services_group = create_security_group('services', 'for DB and AMPQ services onl
 
 
 def launch_instance(instance_name, userdata, security_group):
-    result = conn.create_node(name=instance_name,
+    result = conn.create_node(name=config.get('Names', instance_name),
                               image=image,
                               size=flavor,
                               ex_keyname=keypair_name,
