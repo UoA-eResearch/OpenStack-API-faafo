@@ -129,7 +129,8 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
     -i messaging -i faafo -r api
 '''
 
-instance_controller_1 = conn.create_node(name='app-controller',
+instance_controller_1_name = config.get('Names', 'instance_controller_1_name')
+instance_controller_1 = conn.create_node(name=instance_controller_1_name,
                                          image=image,
                                          size=flavor,
                                          ex_keyname=keypair_name,
@@ -154,7 +155,8 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
     -i faafo -r worker -e 'http://%(ip_controller)s' -m 'amqp://guest:guest@%(ip_controller)s:5672/'
 ''' % {'ip_controller': ip_controller}
 
-instance_worker_1 = conn.create_node(name='app-worker-1',
+app_worker_1_name = config.get('Names', 'app_worker_1_name')
+instance_worker_1 = conn.create_node(name=app_worker_1_name,
                                      image=image,
                                      size=flavor,
                                      ex_keyname=keypair_name,

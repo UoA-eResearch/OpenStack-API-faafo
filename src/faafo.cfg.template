@@ -15,3 +15,10 @@ flavor_id = 639b8b2a-a5a6-4aa2-8592-ca765ee7af63
 
 [Credentials]
 keypair_name =
+
+[Names]
+# chapter 1
+all-in-one =
+# chapter 2
+app-controller_name =
+instance_controller_1_name =
