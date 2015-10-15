@@ -21,4 +21,4 @@ keypair_name =
 all-in-one =
 # chapter 2
 app-controller_name =
-instance_controller_name =
+app_worker_name =
