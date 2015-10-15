@@ -56,9 +56,11 @@ def delete_security_group(security_group_name):
             conn.ex_delete_security_group(security_group)
 
 
-for instance in ('faafo', 'all-in-one', 'app-controller', 'app-worker-1', 'app-api-1',
+for instance in ('faafo', 'app-controller', 'app-worker-1', 'app-api-1',
                  'app-services', 'app-api-2', 'worker-1', 'worker-2', 'worker-3'):
     delete_instance(instance)
+
+delete_instance(config.get('Names', 'all-in-one'))
 
 for group in ('all-in-one', 'worker', 'control', 'api', 'services'):
     delete_security_group(group)

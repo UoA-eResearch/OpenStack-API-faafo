@@ -114,7 +114,7 @@ curl -L -s https://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install
 
 # step-12
 print('Checking for existing instance...')
-instance_name = 'all-in-one'
+instance_name = config.get('Names', 'all-in-one')
 instance_exists = False
 for instance in conn.list_nodes():
     if instance.name == instance_name:
