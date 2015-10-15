@@ -8,8 +8,10 @@ project_name =
 region_name =
 
 [Cloud]
-image_id =
-flavor_id =
+# Ubuntu 14.04
+image_id = 2a882d9c-3185-414c-9683-a4646b5c785e
+# m2.small
+flavor_id = 639b8b2a-a5a6-4aa2-8592-ca765ee7af63
 
 [Credentials]
 keypair_name =
