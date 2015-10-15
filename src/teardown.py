@@ -65,7 +65,6 @@ delete_instance(config.get('Names', 'app_controller_name'))
 delete_instance(config.get('Names', 'app_worker_name'))
 
 
-
 # leave security groups for now
 # for group in ('all-in-one', 'worker', 'control', 'api', 'services'):
 #     delete_security_group(group)
