@@ -3,9 +3,9 @@
 [Connection]
 auth_username =
 auth_password =
-auth_url =
 project_name =
-region_name =
+auth_url = https://keystone.rc.nectar.org.au:5000/v2.0/tokens/
+region_name = Melbourne
 
 [Cloud]
 # Ubuntu 14.04
