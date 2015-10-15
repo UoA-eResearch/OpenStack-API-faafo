@@ -61,8 +61,8 @@ for instance in ('faafo', 'app-controller', 'app-worker-1', 'app-api-1',
     delete_instance(instance)
 
 delete_instance(config.get('Names', 'all-in-one'))
-delete_instance(config.get('Names', 'instance_controller_1_name'))
-delete_instance(config.get('Names', 'app_worker_1_name'))
+delete_instance(config.get('Names', 'instance_controller_name'))
+delete_instance(config.get('Names', 'app_worker_name'))
 
 
 
