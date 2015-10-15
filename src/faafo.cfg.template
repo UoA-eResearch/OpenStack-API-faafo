@@ -20,5 +20,5 @@ keypair_name =
 # chapter 1
 all-in-one =
 # chapter 2
-app-controller_name =
+app_controller_name =
 app_worker_name =
