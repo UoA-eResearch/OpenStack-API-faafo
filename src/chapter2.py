@@ -128,8 +128,8 @@ curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.
     -i messaging -i faafo -r api
 '''
 
-instance_controller_name = config.get('Names', 'instance_controller_name')
-instance_controller = conn.create_node(name=instance_controller_name,
+app_controller_name = config.get('Names', 'app_controller_name')
+instance_controller = conn.create_node(name=app_controller_name,
                                        image=image,
                                        size=flavor,
                                        ex_keyname=keypair_name,
