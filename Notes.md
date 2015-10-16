@@ -57,4 +57,9 @@ faafo delete --help
 
 for i in $(seq 1 5); do faafo create; done
 uptime
+
+# just to see it on a given instance:
+ssh -i ~/.ssh/nectar_dev.pem ubuntu@130.56.253.87 uptime
 ```
+
+
