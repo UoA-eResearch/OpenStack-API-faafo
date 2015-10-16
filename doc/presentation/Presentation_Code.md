@@ -114,6 +114,8 @@ So use your checklists to launch the VM!
 
 -- *Slide End* --
 
+-- *Slide* --
+
 ## All that was done your instance
 
 ```bash
@@ -125,12 +127,20 @@ pip install apache-libcloud
 apt-get install git
 git clone https://github.com/MartinPaulo/faafo_infrastructure.git
 ```
+-- *Slide End* --
+
+## `ssh` into your instance
+
+```bash
+ssh -i <key> ubuntu@<IP>
+```
 
 -- *Slide* --
 
 ## Set up your configs...
 
 ```bash
+sudo -i
 cp faafo.cfg.template faafo.cfg
 nano faafo.cfg
 ```
@@ -183,21 +193,97 @@ nano chapter1.py
 
 ## Let's play with faafo
 
-### From your machine...
+From your local machine!
 
 ```bash
-ssh -i key ubuntu@130.56.253.89
+ssh -i <key> ubuntu@<IP>
 ```
 
 -- *Slide End* --
 
 -- *Slide* --
+
 # The magic!
 
 ### FAAFO architecture
 
 ![Faafo](images/Faafo.png)
 
+-- *Slide End* --
+
+-- *Slide* --
+
+# The Queue
+
+![The aueue](images/Queue.png)
+
+-- *Slide End* --
+
+-- *Slide* --
+
+# And now...
+
+A walk through faafo's code...
+
+-- *Slide End* --
+
+-- *Slide* --
+
+# Scale it up one level
+
+```bash
+python teardown.py 
+python chapter2.py 
+```
+
+-- *Slide End* --
+
+-- *Slide* --
+
+## Let's play with faafo
+
+To see the difference.
+
+From your local machine!
+
+```bash
+ssh -i <key> ubuntu@<IP>
+```
+
+-- *Slide End* --
+
+
+-- *Slide* --
+
+# Much more faafo
+
+```bash
+python teardown.py 
+python chapter3.py 
+```
+
+-- *Slide End* --
+
+-- *Slide* --
+
+## Let's play with faafo
+
+To see the difference.
+
+From your local machine!
+
+```bash
+ssh -i <key> ubuntu@<IP>
+```
+-- *Slide End* --
+
+-- *Slide* --
+
+## Tear it all down
+
+```bash
+python teardown.py
+```
 -- *Slide End* --
 
 -- *Slide* --

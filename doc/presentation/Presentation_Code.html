@@ -151,9 +151,24 @@ So use your checklists to launch the VM!
 </script></section>
 <section data-markdown><script type="text/template">
 
+## All that was done your instance
+
+```bash
+sudo -i
+apt-get update
+apt-get upgrade
+apt-get install python-pip
+pip install apache-libcloud
+apt-get install git
+git clone https://github.com/MartinPaulo/faafo_infrastructure.git
+```
+</script></section>
+<section data-markdown><script type="text/template">
+
 ## Set up your configs...
 
 ```bash
+sudo -i
 cp faafo.cfg.template faafo.cfg
 nano faafo.cfg
 ```
@@ -202,20 +217,88 @@ nano chapter1.py
 
 ## Let's play with faafo
 
-### From your machine...
+From your local machine!
 
 ```bash
-ssh -i key ubuntu@130.56.253.89
+ssh -i <key> ubuntu@<IP>
 ```
 
 </script></section>
 <section data-markdown><script type="text/template">
+
 # The magic!
 
 ### FAAFO architecture
 
 ![Faafo](images/Faafo.png)
 
+</script></section>
+<section data-markdown><script type="text/template">
+
+# The Queue
+
+![The aueue](images/Queue.png)
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# And now...
+
+A walk through faafo's code...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Scale it up one level
+
+```bash
+python teardown.py 
+python chapter2.py 
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Let's play with faafo
+
+To see the difference.
+
+From your local machine!
+
+```bash
+ssh -i <key> ubuntu@<IP>
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Much more faafo
+
+```bash
+python teardown.py 
+python chapter3.py 
+```
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Let's play with faafo
+
+To see the difference.
+
+From your local machine!
+
+```bash
+ssh -i <key> ubuntu@<IP>
+```
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Tear it all down
+
+```bash
+python teardown.py
+```
 </script></section>
 <section data-markdown><script type="text/template">
 
