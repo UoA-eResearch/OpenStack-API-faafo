@@ -125,7 +125,7 @@ The entire team can be fed by two large Pizza's
 * More support
 * Application speed
 * Decentralized data
-* Lock you into integration choices
+* Lock you into integration choices (refactoring)
 * More points of failure
 
 </script></section>
@@ -146,208 +146,73 @@ A handy dandy fractal generator
 
 ## To explore it we need to run it...
 
-So: 
-
-[libcloud 0.15.1 or higher](https://libcloud.apache.org/getting-started.html)
+So use your checklists to launch the VM!
 
 </script></section>
 <section data-markdown><script type="text/template">
 
-## Step 1: establish a connection
+## Set up your configs...
 
-```python
-provider = get_driver(Provider.OPENSTACK)
-conn = provider(auth_username,
-                auth_password,
-                ex_force_auth_url=auth_url,
-                ex_force_auth_version='2.0_password',
-                ex_tenant_name=project_name,
-                ex_force_service_region=region_name)
+```bash
+cp faafo.cfg.template faafo.cfg
+nano faafo.cfg
 ```
 
 </script></section>
 <section data-markdown><script type="text/template">
 
-## Step 2: list the images
+## Use your initials!
 
 ```python
-images = conn.list_images()
-for image in images:
-    print(image)
+[Names]
+# chapter 1
+all-in-one = mp_all_in_one
+# chapter 2
+app_controller_name = mp_ac
+app_worker_name = mp_wn
+# chapter 3
+app-services = mp_as
+app-api-1 = mp_aa1
+app-api-2 = mp_aa2
+worker-1 = mp_w1
+worker-2 = mp_w2
+worker-3 = mp_w3
 ```
 
 </script></section>
 <section data-markdown><script type="text/template">
 
-## Step 3: list the flavors
+## Unleash the monolith!
 
-```python
-flavors = conn.list_sizes()
-for flavor in flavors:
-    print(flavor)
+```bash
+python chapter1.py 
 ```
 
 </script></section>
 <section data-markdown><script type="text/template">
 
-## Step 4: get an image
+## A walk through the launch code...
 
-```python
-image_id = config.get('Cloud', 'image_id')
-image = conn.get_image(image_id)
-print(image)
+```bash
+nano chapter1.py
 ```
 
 </script></section>
 <section data-markdown><script type="text/template">
 
-## Step 5: get a flavor
+## Let's play with faafo
 
-```python
-flavor_id = config.get('Cloud', 'flavor_id')
-flavor = conn.ex_get_size(flavor_id)
-print(flavor)
+### From your machine...
+
+```bash
+ssh -i key ubuntu@130.56.253.89
 ```
 
 </script></section>
 <section data-markdown><script type="text/template">
+# The magic!
 
-## Step 6: create a test instance
-
-```python
-instance_name = 'faafo'
-testing_instance = conn.create_node(name=instance_name, image=image, size=flavor)
-print(testing_instance)
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Step 7: confirm its running
-
-```python
-instances = conn.list_nodes()
-for instance in instances:
-    print(instance)
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Step 8: destroy the test instance
-
-```python
-conn.destroy_node(testing_instance)
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Step 9:
-
-```python
-print('Checking for existing SSH key pair...')
-keypair_name = config.get('Credentials', 'keypair_name')
-pub_key_file = config.get('Credentials', 'pub_key_file')
-keypair_exists = False
-for keypair in conn.list_key_pairs():
-    if keypair.name == keypair_name:
-        keypair_exists = True
-
-if keypair_exists:
-    print('Keypair {} already exists. Skipping import'.format(keypair_name))
-else:
-    print('adding keypair...')
-    conn.import_key_pair_from_file(keypair_name, pub_key_file)
-
-for keypair in conn.list_key_pairs():
-    print(keypair)
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Step 10:
- 
-```python
-print('Checking for existing security group...')
-security_group_name = 'all-in-one'
-security_group_exists = False
-for security_group in conn.ex_list_security_groups():
-    if security_group.name == security_group_name:
-        all_in_one_security_group = security_group
-        security_group_exists = True
-
-if security_group_exists:
-    print('Security Group {} already exists. Skipping creation'.format(all_in_one_security_group.name))
-else:
-    all_in_one_security_group = conn.ex_create_security_group(security_group_name,
-                                                              'network access for all-in-one application.')
-    conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 80, 80)
-    conn.ex_create_security_group_rule(all_in_one_security_group, 'TCP', 22, 22)
-
-for security_group in conn.ex_list_security_groups():
-    print(security_group)
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Step 11: 
-
-```python
-userdata = '''#!/usr/bin/env bash
-curl -L -s https://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
-    -i faafo -i messaging -r api -r worker -r demo
-'''
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Step 12:
-
-```python
-print('Checking for existing instance...')
-instance_name = 'all-in-one'
-instance_exists = False
-for instance in conn.list_nodes():
-    if instance.name == instance_name:
-        testing_instance = instance
-        instance_exists = True
-
-if instance_exists:
-    print('Instance {} already exists. Skipping creation'.format(testing_instance.name))
-else:
-    print('Creating new instance')
-    testing_instance = conn.create_node(name=instance_name,
-                                        image=image,
-                                        size=flavor,
-                                        ex_keyname=keypair_name,
-                                        ex_userdata=userdata,
-                                        ex_security_groups=[all_in_one_security_group])
-    conn.wait_until_running([testing_instance])
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## Fix for bug 
-
-Where the instance isn't immediately updated with the instance data
-
-```python
-for instance in conn.list_nodes():
-    if instance.id == testing_instance.id:
-        testing_instance = instance
-
-print (testing_instance)
-```
-
-</script></section>
-<section data-markdown><script type="text/template">
-
-## FAAFO architecture
+### FAAFO architecture
 
 ![Faafo](images/Faafo.png)
 
