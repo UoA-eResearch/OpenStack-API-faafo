@@ -336,7 +336,7 @@ python chapter3.py
 ## A walk through the launch code...
 
 ```bash
-nano chapter2.py
+nano chapter3.py
 ```
 
 -- *Slide End* --
