@@ -94,11 +94,9 @@ The entire team can be fed by two large Pizza's
 
 -- *Slide* --
 
-## A sample application
+## A sample application!
 
-### FAAFO
-
-[First App Application For OpenStack](https://github.com/stackforge/faafo)
+### First App Application For OpenStack (faafo)
 
 https://github.com/stackforge/faafo
 
@@ -108,9 +106,24 @@ A handy dandy fractal generator
 
 -- *Slide* --
 
+## They even wrote a book!
+
+### Writing your first OpenStack application
+
+http://developer.openstack.org/firstapp-libcloud/
+
+### PS: a work in progress...
+
+-- *Slide End* --
+
+-- *Slide* --
+
 ## To explore it we need to run it...
 
 So use your checklists to launch the VM!
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
 
 -- *Slide End* --
 
@@ -135,6 +148,9 @@ git clone https://github.com/MartinPaulo/faafo_infrastructure.git
 ssh -i <key> ubuntu@<IP>
 ```
 
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
 -- *Slide* --
 
 ## Set up your configs...
@@ -144,6 +160,9 @@ sudo -i
 cp faafo.cfg.template faafo.cfg
 nano faafo.cfg
 ```
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
 
 -- *Slide End* --
 
@@ -167,6 +186,10 @@ worker-2 = mp_w2
 worker-3 = mp_w3
 ```
 
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+
 -- *Slide End* --
 
 -- *Slide* --
@@ -176,6 +199,9 @@ worker-3 = mp_w3
 ```bash
 python chapter1.py 
 ```
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
 
 -- *Slide End* --
 
@@ -193,10 +219,31 @@ nano chapter1.py
 
 ## Let's play with faafo
 
-From your local machine!
+Connect to the server....
 
 ```bash
 ssh -i <key> ubuntu@<IP>
+```
+
+PS: From your local machine!
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+-- *Slide End* --
+
+-- *Slide* --
+
+## faafo cheat sheet...
+
+```bash
+faafo create
+faafo create --height 9999 --width 9999 --tasks 5
+faafo get --help
+faafo list --help
+faafo delete --help
+
+for i in $(seq 1 5); do faafo create; done
 ```
 
 -- *Slide End* --
@@ -225,6 +272,8 @@ ssh -i <key> ubuntu@<IP>
 
 A walk through faafo's code...
 
+https://github.com/stackforge/faafo
+
 -- *Slide End* --
 
 -- *Slide* --
@@ -236,6 +285,19 @@ python teardown.py
 python chapter2.py 
 ```
 
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+-- *Slide End* --
+
+-- *Slide* --
+
+## A walk through the launch code...
+
+```bash
+nano chapter2.py
+```
+
 -- *Slide End* --
 
 -- *Slide* --
@@ -250,8 +312,10 @@ From your local machine!
 ssh -i <key> ubuntu@<IP>
 ```
 
--- *Slide End* --
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
 
+-- *Slide End* --
 
 -- *Slide* --
 
@@ -262,6 +326,19 @@ python teardown.py
 python chapter3.py 
 ```
 
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+-- *Slide End* --
+
+-- *Slide* --
+
+## A walk through the launch code...
+
+```bash
+nano chapter2.py
+```
+
 -- *Slide End* --
 
 -- *Slide* --
@@ -275,6 +352,10 @@ From your local machine!
 ```bash
 ssh -i <key> ubuntu@<IP>
 ```
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
 -- *Slide End* --
 
 -- *Slide* --
@@ -284,6 +365,20 @@ ssh -i <key> ubuntu@<IP>
 ```bash
 python teardown.py
 ```
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+-- *Slide End* --
+
+-- *Slide* --
+
+## A walk through the teardown code...
+
+```bash
+nano teardown.py
+```
+
 -- *Slide End* --
 
 -- *Slide* --
@@ -292,6 +387,7 @@ python teardown.py
 
 * Build the simplest thing that can work (a monolith)
 * Make sure it's got well defined internal boundaries
+  ([package by feature rather than by layer](http://www.javapractices.com/topic/TopicAction.do?Id=205))
 * When confident you are on the right path, turn it into a neomonolith...
 * The start to split out the microservices as you grow
 
