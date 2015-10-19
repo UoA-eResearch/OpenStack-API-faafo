@@ -47,6 +47,7 @@ https://github.com/resbaz/nectar-cloud-lessons
 
 ## Finally, some notes
 
-http://git.io/notes_on_the_nectar_cloud
+* http://git.io/notes_on_the_nectar_cloud
+* http://git.io/debug_a_failed_instance
 
 -- *Slide End* --
