@@ -42,3 +42,11 @@ https://github.com/resbaz/nectar-cloud-lessons
 [Lesson 2](Lesson_II.html)
 
 -- *Slide End* --
+
+-- *Slide* --
+
+## Finally, some notes
+
+http://git.io/notes_on_the_nectar_cloud
+
+-- *Slide End* --
