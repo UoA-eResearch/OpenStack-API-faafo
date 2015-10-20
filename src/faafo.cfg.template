@@ -9,7 +9,7 @@ region_name = Melbourne
 
 [Cloud]
 # Ubuntu 14.04
-image_id = 2a882d9c-3185-414c-9683-a4646b5c785e
+image_id = 778e7b2e-4e67-44eb-9565-9c920e236dfd
 # m2.small
 flavor_id = 639b8b2a-a5a6-4aa2-8592-ca765ee7af63
 

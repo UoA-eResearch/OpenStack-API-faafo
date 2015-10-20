@@ -149,7 +149,7 @@ def attach_ip_number(target_instance):
 
 # launch app services instance (database and messaging)
 app_services_userdata = '''#!/usr/bin/env bash
-curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+curl -L -s https://raw.githubusercontent.com/MartinPaulo/son_of_faafo/master/contrib/install.sh | bash -s -- \
     -i database -i messaging
 '''
 
@@ -159,7 +159,7 @@ print('Instance services will be available for ssh at: //{}'.format(services_ip)
 
 # launch the two api instances
 api_userdata = '''#!/usr/bin/env bash
-curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+curl -L -s https://raw.githubusercontent.com/MartinPaulo/son_of_faafo/master/contrib/install.sh | bash -s -- \
     -i faafo -r api -m 'amqp://guest:guest@%(services_ip)s:5672/' \
     -d 'mysql+pymysql://faafo:password@%(services_ip)s:3306/faafo'
 ''' % {'services_ip': services_ip}
@@ -174,7 +174,7 @@ print('Instance api_2 will be deployed to http://{}'.format(api_2_ip))
 
 # launch the three worker instances
 worker_user_data = '''#!/usr/bin/env bash
-curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+curl -L -s https://raw.githubusercontent.com/MartinPaulo/son_of_faafo/master/contrib/install.sh | bash -s -- \
     -i faafo -r worker -e 'http://%(api_1_ip)s' -m 'amqp://guest:guest@%(services_ip)s:5672/'
 ''' % {'api_1_ip': api_1_ip, 'services_ip': services_ip}
 

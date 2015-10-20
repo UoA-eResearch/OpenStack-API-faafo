@@ -124,7 +124,7 @@ def attach_ip_number(target_instance):
 print("Building controller")
 
 userdata = '''#!/usr/bin/env bash
-curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+curl -L -s https://raw.githubusercontent.com/MartinPaulo/son_of_faafo/master/contrib/install.sh | bash -s -- \
     -i messaging -i faafo -r api
 '''
 
@@ -150,7 +150,7 @@ print('Instance {} will be deployed to http://{}'.format(instance_controller.nam
 print("Building worker")
 
 userdata = '''#!/usr/bin/env bash
-curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+curl -L -s https://raw.githubusercontent.com/MartinPaulo/son_of_faafo/master/contrib/install.sh | bash -s -- \
     -i faafo -r worker -e 'http://%(ip_controller)s' -m 'amqp://guest:guest@%(ip_controller)s:5672/'
 ''' % {'ip_controller': ip_controller}
 
