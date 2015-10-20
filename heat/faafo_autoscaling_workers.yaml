@@ -34,7 +34,7 @@ parameters:
   faafo_source:
     type: string
     description: The http location of the faafo application install script
-    default: http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh
+    default: https://raw.githubusercontent.com/openstack/faafo/master/contrib/install.sh
 
 
 resources:
@@ -86,7 +86,7 @@ resources:
           FromPort: "5672"
           ToPort: "5672"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: worker }
+          # SourceSecurityGroupName: { get_resource: worker }
 
   services:
     type: "AWS::EC2::SecurityGroup"
@@ -108,19 +108,19 @@ resources:
           FromPort: "5672"
           ToPort: "5672"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: worker }
+          # SourceSecurityGroupName: { get_resource: worker }
         -
           IpProtocol: "tcp"
           FromPort: "5672"
           ToPort: "5672"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: api }
+          # SourceSecurityGroupName: { get_resource: api }
         -
           IpProtocol: "tcp"
           FromPort: "3306"
           ToPort: "3306"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: api }
+          # SourceSecurityGroupName: { get_resource: api }
 
   app-services:
     # The database and the AMPQ services run on this machine.

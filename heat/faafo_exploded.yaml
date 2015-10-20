@@ -33,6 +33,11 @@ parameters:
       - custom_constraint: glance.image
         description: Must be a valid image on your cloud
 
+  faafo_source:
+    type: string
+    description: The http location of the faafo application install script
+    default: https://raw.githubusercontent.com/openstack/faafo/master/contrib/install.sh
+
 
 resources:
 
@@ -83,7 +88,7 @@ resources:
           FromPort: "5672"
           ToPort: "5672"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: worker }
+          # SourceSecurityGroupName: { get_resource: worker }
 
   services:
     type: "AWS::EC2::SecurityGroup"
@@ -105,19 +110,19 @@ resources:
           FromPort: "5672"
           ToPort: "5672"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: worker }
+          # SourceSecurityGroupName: { get_resource: worker }
         -
           IpProtocol: "tcp"
           FromPort: "5672"
           ToPort: "5672"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: api }
+          # SourceSecurityGroupName: { get_resource: api }
         -
           IpProtocol: "tcp"
           FromPort: "3306"
           ToPort: "3306"
           CidrIp: "0.0.0.0/0"
-          SourceSecurityGroupName: { get_resource: api }
+          # SourceSecurityGroupName: { get_resource: api }
 
   app-services:
     # The database and the AMPQ services run on this machine.
@@ -133,11 +138,12 @@ resources:
         str_replace:
           template: |
             #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            curl -L -s faafo_installer | bash -s -- \
             -i database -i messaging
             wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+            faafo_installer: { get_param: faafo_source }
 
   api_init:
     type: OS::Heat::SoftwareConfig
@@ -147,13 +153,14 @@ resources:
         str_replace:
           template: |
             #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            curl -L -s faafo_installer | bash -s -- \
             -i faafo -r api -m 'amqp://guest:guest@services_ip:5672/' \
             -d 'mysql://faafo:password@services_ip:3306/faafo'
             wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
             services_ip: { get_attr: [app-services, first_address] }
+            faafo_installer: { get_param: faafo_source }
 
   api_init_userdata:
     type: OS::Heat::MultipartMime
@@ -193,13 +200,14 @@ resources:
         str_replace:
           template: |
             #!/usr/bin/env bash
-            curl -L -s http://git.openstack.org/cgit/stackforge/faafo/plain/contrib/install.sh | bash -s -- \
+            curl -L -s faafo_installer | bash -s -- \
             -i faafo -r worker -e 'http://api_1_ip' -m 'amqp://guest:guest@services_ip:5672/'
             wc_notify --data-binary '{"status": "SUCCESS"}'
           params:
             wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
             api_1_ip: { get_attr: [instance_api_1, first_address] }
             services_ip: { get_attr: [app-services, first_address] }
+            faafo_installer: { get_param: faafo_source }
 
   worker_init_userdata:
     type: OS::Heat::MultipartMime
