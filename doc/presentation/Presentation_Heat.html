@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+
+    <title>eR 2015 Workshop</title>
+
+    <meta name="description" content="Slides for the October 2015 NeCTAR eResearch Workshop.">
+    <meta name="author" content="Martin Paulo">
+
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, minimal-ui">
+
+    <link rel="stylesheet" href="revealjs/css/reveal.css">
+    <link rel="stylesheet" href="revealjs/css/theme/solarized.css" id="theme">
+
+    <!-- Code syntax highlighting -->
+    <link rel="stylesheet" href="revealjs/lib/css/zenburn.css">
+
+    <!-- Printing and PDF exports -->
+    <script>
+        var link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.type = 'text/css';
+        link.href = window.location.search.match(/print-pdf/gi) ? 'revealjs/css/print/pdf.css' : 'revealjs/css/print/paper.css';
+        document.getElementsByTagName('head')[0].appendChild(link);
+    </script>
+
+    <!--[if lt IE 9]>
+    <script src="revealjs/lib/js/html5shiv.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+
+<div class="reveal">
+
+    <!-- Any section element inside of this container is displayed as a slide -->
+    <div class="slides">
+<!-- Slides go here -->
+<style type="text/css">.reveal ol {list-style-type: upper-alpha;}</style>
+<section data-markdown><script type="text/template">
+
+# Heat
+
+**Q:** What is Heat? 
+
+**A:**
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Heat
+
+**Q:** What is Heat? 
+
+**A:** The OpenStack template driven orchestration service.
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Heat gives infrastructure
+
+* Development practices
+* Repeatability
+* Certainty
+* Learning
+
+So it gives you wings and limits human error...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## What's not to like?
+
+Well, a year ago I called it:
+
+* Green
+* Confused
+* Limited
+* Badly documented
+
+But **Promising**
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## The stack lifecycle
+
+* Create a template
+* Upload to Heat
+* The stack is created and run
+* You may delete or update the stack
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Heat clients
+
+* A command line client
+* A RESTful API
+* The Dashboard
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## NeCTAR sample templates
+
+https://github.com/NeCTAR-RC/heat-templates
+
+Lists the supported resources,
+ 
+with links to sample templates
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## NeCTAR documentation
+
+http://tinyurl.com/heat-docs
+
+An introduction from the users point of view.
+
+Note the introduction to YAML as well...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## NeCTAR dashboard
+
+https://dashboard.rc.nectar.org.au
+
+The stacks tab.
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Lets give it a go...
+
+```
+heat_template_version: 2014-10-16
+...
+resources:
+  ...
+  the_resource:
+    type: OS::Heat::RandomString
+    properties:
+      length: Integer
+```
+
+When loading, use your initials in the template name: eg: `mp_random`
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Delete your template
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+
+## But we don't know our password?
+
+Read about `get_attr` at: 
+
+http://docs.openstack.org/developer/heat/template_guide/hot_spec.html
+      
+Then add the `value` output...
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Delete your template
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## But I want a longer password!
+
+Read about `get_param` at: 
+
+http://docs.openstack.org/developer/heat/template_guide/hot_spec.html
+
+Then add a `length` parameter.
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Delete your template
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## But it musn't be too long!
+
+Read about **Parameter Constraints** at: 
+
+http://docs.openstack.org/developer/heat/template_guide/hot_spec.html
+
+Then constrain the input to 10-12 chars...
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Delete your template
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+## Password smashword. I want complexity!
+
+Remember faafo? Now for the all in one...
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+</script></section>
+<section data-markdown><script type="text/template">
+
+# Title
+
+* <span style="color:red">&#9632;</style> = help me!
+* <span style="color:green">&#9632;</style> = I'm ready to move on...
+
+
+</script></section>
+    </div>
+
+</div>
+
+<script src="revealjs/lib/js/head.min.js"></script>
+<script src="revealjs/js/reveal.js"></script>
+
+<script>
+
+    // Full list of configuration options available at:
+    // https://github.com/hakimel/reveal.js#configuration
+    Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        transition: 'slide', // none/fade/slide/convex/concave/zoom
+
+        // Optional reveal.js plugins
+        dependencies: [
+            {
+                src: 'revealjs/lib/js/classList.js', condition: function () {
+                return !document.body.classList;
+            }
+            },
+            {
+                src: 'revealjs/plugin/markdown/marked.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'revealjs/plugin/markdown/markdown.js', condition: function () {
+                return !!document.querySelector('[data-markdown]');
+            }
+            },
+            {
+                src: 'revealjs/plugin/highlight/highlight.js', async: true, condition: function () {
+                return !!document.querySelector('pre code');
+            }, callback: function () {
+                hljs.initHighlightingOnLoad();
+            }
+            },
+            {src: 'revealjs/plugin/zoom-js/zoom.js', async: true},
+            {src: 'revealjs/plugin/notes/notes.js', async: true}
+        ]
+    });
+
+</script>
+
+</body>
+</html>
