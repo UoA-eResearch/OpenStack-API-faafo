@@ -1,0 +1,8 @@
+heat_template_version: 2014-10-16
+
+resources:
+
+  my_random_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: 16

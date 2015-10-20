@@ -1,0 +1,24 @@
+heat_template_version: 2014-10-16
+
+parameters:
+
+  password_length:
+    type: number
+    label: Password Length
+    description: Length of the password to enter
+    constraints:
+      - range: { min: 10, max: 12 }
+        description: Password must be between 10 and 12 characters
+
+resources:
+
+  my_random_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: { get_param: password_length }
+
+outputs:
+
+  random_string:
+    description: The random string created
+    value: {get_attr: [ my_random_string, value ]}

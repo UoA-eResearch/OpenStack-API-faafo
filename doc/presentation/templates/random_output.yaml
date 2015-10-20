@@ -1,0 +1,14 @@
+heat_template_version: 2014-10-16
+
+resources:
+
+  my_random_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: 16
+
+outputs:
+
+  random_string:
+    description: The random string created
+    value: {get_attr: [ my_random_string, value ]}
