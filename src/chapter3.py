@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 # Chapter 3's script (titled "Scaling out", at http://developer.openstack.org/firstapp-libcloud/scaling_out.html ),
 # but with extra changes added.
 #       I put the configuration into a config file, so that I can share it amongst files, and not accidentally
@@ -25,15 +26,19 @@ auth_username = config.get('Connection', 'auth_username')
 auth_password = config.get('Connection', 'auth_password')
 auth_url = config.get('Connection', 'auth_url')
 project_name = config.get('Connection', 'project_name')
+project_domain = config.get('Connection', 'project_domain')
+project_id = config.get('Connection', 'project_id')
 region_name = config.get('Connection', 'region_name')
 
 provider = get_driver(Provider.OPENSTACK)
 conn = provider(auth_username,
                 auth_password,
                 ex_tenant_name=project_name,
+                ex_domain_name=project_domain,
                 ex_force_auth_url=auth_url,
                 ex_force_service_name='Compute Service',
                 ex_force_auth_version='2.0_password',
+                ex_availability_zone=region_name,
                 ex_force_service_region=region_name)
 
 image_id = config.get('Cloud', 'image_id')

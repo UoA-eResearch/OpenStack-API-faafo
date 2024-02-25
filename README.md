@@ -6,6 +6,7 @@ cloud.
 The first app's code lives here:
 
 * https://github.com/stackforge/faafo
+* Forked from https://github.com/MartinPaulo/faafo_infrastructure.git
 
 The documentation about getting it up and going on OpenStack is here:
 
@@ -22,7 +23,7 @@ https://www.nginx.com/blog/microservices-at-netflix-architectural-best-practices
 
 ## Chapter 1: Getting started
 
-The final complete code sample doesn't deal with OpenStack installations that use the private IP's as public IP's. 
+The final complete code sample doesn't deal with OpenStack installations that use the private IP's as public IP's.
 And there is at least one of those that I know....
 
 It also creates an IP address in the pool of floating IP's: and then ignores it if there is a public IP... Surely in
@@ -44,7 +45,7 @@ I've removed some of the boilerplate from Chapter 1 and introduced several more 
 
 ## Chapter 6: Orchestration
 
-I've added four templates so far: 
+I've added four templates so far:
 
 * [faafo_all_in_one.yaml](heat/faafo_all_in_one.yaml): a straight port of chapter 1's code.
 * [faafo_exploded.yaml](heat/faafo_exploded.yaml): a straight port of chapter 3's code.
@@ -53,10 +54,10 @@ I've added four templates so far:
 
 ## In general
 
-I put the configuration into a config file, so that I can share it amongst files, and not accidentally 
+I put the configuration into a config file, so that I can share it amongst files, and not accidentally
 check it into source control.
 
-I've added a script to [tear down](src/teardown.py) the infrastructure set up in chapters 1 through 3 
+I've added a script to [tear down](src/teardown.py) the infrastructure set up in chapters 1 through 3
 
 ## Useful bits
 
@@ -98,8 +99,6 @@ your images...
 
 Reported:
 
-https://bugs.launchpad.net/faafo/+bug/1496687 
+https://bugs.launchpad.net/faafo/+bug/1496687
 
 And submitted a fix submitted that has now been deployed into FAAFO proper.
-
-

@@ -1,3 +1,4 @@
+#!/usr/local/bin/python
 # Chapter 2's script (titled "Introduction to the fractals application architecture",
 # at http://developer.openstack.org/firstapp-libcloud/introduction.html ), but with extra changes added.
 #       I put the configuration into a config file, so that I can share it amongst files, and not accidentally
@@ -34,6 +35,7 @@ conn = provider(auth_username,
                 ex_force_auth_url=auth_url,
                 ex_force_service_name='Compute Service',
                 ex_force_auth_version='2.0_password',
+                ex_availability_zone=region_name,
                 ex_force_service_region=region_name)
 
 image_id = config.get('Cloud', 'image_id')

@@ -25,6 +25,7 @@ conn = provider(auth_username,
                 ex_force_auth_url=auth_url,
                 ex_force_service_name='Compute Service',
                 ex_force_auth_version='2.0_password',
+                ex_availability_zone=region_name,
                 ex_force_service_region=region_name)
 
 

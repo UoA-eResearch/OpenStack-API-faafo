@@ -1,3 +1,5 @@
+#!/usr/local/bin/python
+
 # More or less a straight riff of the original documentation for chapter 1, titled
 # "Getting Started". (http://developer.openstack.org/firstapp-libcloud/getting_started.html)
 # There are three differences, though:
@@ -7,7 +9,7 @@
 #       Added a work around that solves the problem of instances not having their private IP properly populated
 #           before it is accessed.
 
-from libcloud.compute.types import Provider
+from libcloud.compute.types import Provider  #apache-libcloud
 from libcloud.compute.providers import get_driver
 from libcloud.common.exceptions import BaseHTTPError
 
@@ -26,16 +28,19 @@ auth_username = config.get('Connection', 'auth_username')
 auth_password = config.get('Connection', 'auth_password')
 auth_url = config.get('Connection', 'auth_url')
 project_name = config.get('Connection', 'project_name')
+project_domain = config.get('Connection', 'project_domain')
+project_id = config.get('Connection', 'project_id')
 region_name = config.get('Connection', 'region_name')
 
 provider = get_driver(Provider.OPENSTACK)
 conn = provider(auth_username,
                 auth_password,
-                ex_tenant_name=project_name,
+                ex_tenant_id=project_id,
                 ex_force_auth_url=auth_url,
                 ex_force_service_name='Compute Service',
                 ex_force_auth_version='2.0_password',
-                ex_force_service_region=region_name)
+                ex_availability_zone=region_name,
+                ex_force_service_region=region_name )
 
 # step-2
 images = conn.list_images()
@@ -46,6 +51,8 @@ for image in images:
 flavors = conn.list_sizes()
 for flavor in flavors:
     print(flavor)
+
+quit()
 
 # step-4
 image_id = config.get('Cloud', 'image_id')
